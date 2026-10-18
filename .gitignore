@@ -1,0 +1,97 @@
+# ==============================================================================
+# Git Ignore Rules for Safe Company Chatbot (safegpt)
+# ==============================================================================
+
+# --- Secrets and Environment Configuration ---
+.env
+.env.*
+!.env.example
+secrets.json
+*.pem
+*.key
+
+# --- Python Virtual Environments ---
+.venv/
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# --- Python Bytecode and Cache ---
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+*.egg-info/
+dist/
+build/
+eggs/
+parts/
+bin/
+var/
+sdist/
+develop-eggs/
+.installed.cfg
+*.egg
+
+# --- Node.js & Frontend ---
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+frontend/dist/
+frontend/build/
+frontend/.next/
+frontend/out/
+
+# --- Uploaded Documents, Local Data & Company Files ---
+# Critical for offline privacy: never commit uploaded company documents
+uploads/
+data/
+backend/data/
+backend/uploads/
+*.pdf
+*.docx
+*.doc
+*.xlsx
+*.xls
+*.csv
+*.txt
+!requirements.txt
+!README.md
+!backend/requirements.txt
+
+# --- AI Models, Weights & Vector Stores ---
+*.gguf
+*.bin
+*.safetensors
+*.pt
+*.onnx
+chroma_db/
+vector_store/
+pgdata/
+
+# --- Databases ---
+*.sqlite
+*.sqlite3
+*.db
+
+# --- Logs ---
+logs/
+*.log
+
+# --- IDE and Editor Settings ---
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# --- OS Specific Files ---
+.DS_Store
+Thumbs.db
+desktop.ini

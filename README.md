@@ -2,6 +2,8 @@
 
 A local-first AI document assistant designed to help employees search and understand company documents while protecting sensitive information through access control, privacy filtering, and security evaluation.
 
+---
+
 ## Overview
 
 Companies maintain documents containing internal processes, project details, employee information, and confidential business data. Employees may use external AI tools to understand these documents, potentially exposing sensitive information.
@@ -10,11 +12,15 @@ Companies maintain documents containing internal processes, project details, emp
 
 The system combines document-based question answering, permission-controlled retrieval, sensitive-data detection, and security testing in one application.
 
+---
+
 ## Problem Statement
 
 Using external AI services to process confidential company documents can create data exposure risks. At the same time, restricting AI assistance entirely can make it harder for employees to find and understand information.
 
 The project explores how a local AI assistant can provide useful document-based answers while enforcing access permissions and applying privacy safeguards.
+
+---
 
 ## Proposed Solution
 
@@ -31,6 +37,8 @@ When a user submits a question, the system:
 
 The application also plans to support access requests for restricted documents and controlled security tests.
 
+---
+
 ## Key Features
 
 - **Local AI processing:** Run a language model locally using Ollama.
@@ -43,25 +51,27 @@ The application also plans to support access requests for restricted documents a
 - **Security evaluation:** Test unauthorized retrieval, sensitive-data leakage, and prompt injection using controlled test cases.
 - **Audit records:** Track important actions and security-related events.
 
-These are the planned capabilities; individual features will be marked complete as implementation and testing progress.
+---
 
 ## Technology Stack
 
-| Component | Technology | Purpose |
-|---|---|---|
-| Frontend | React, TypeScript | User interface and application workflows |
-| Styling | Tailwind CSS | Responsive and consistent interface design |
-| Frontend tooling | Vite | Development server and production builds |
-| Backend | Python, FastAPI | APIs, application logic, and security enforcement |
-| Database | PostgreSQL | Users, permissions, documents, chunks, and audit records |
-| PDF processing | PyMuPDF | Extract text and page information from PDFs |
-| Word processing | python-docx | Extract text from DOCX files |
-| Local model runtime | Ollama | Run the language model locally |
-| Privacy protection | Microsoft Presidio, custom rules | Detect and transform sensitive information |
-| Testing | pytest | Automated backend and security tests |
-| Version control | Git, GitHub | Source control and team collaboration |
+| Component | Technology | Implementation Status | Purpose |
+|---|---|---|---|
+| **Backend API** | Python 3.11+, FastAPI | **Implemented (Day 1)** | High-performance REST APIs, endpoints, and application logic |
+| **Web Server** | Uvicorn (ASGI) | **Implemented (Day 1)** | Asynchronous ASGI server for development & production |
+| **Frontend** | React, TypeScript | *Planned* | User interface and chat workflow |
+| **Styling** | Tailwind CSS / Vanilla CSS | *Planned* | Responsive and consistent interface design |
+| **Frontend Tooling** | Vite | *Planned* | Modern dev server and optimized production bundler |
+| **Database** | PostgreSQL | *Planned* | Stores users, permissions, document chunks, and audit logs |
+| **Semantic Retrieval** | pgvector / Full-text search | *Planned* | Vector search for semantic document chunk matching |
+| **PDF Processing** | PyMuPDF | *Planned* | Extract text and page coordinates from PDFs |
+| **Word Processing** | python-docx | *Planned* | Extract structured text from DOCX files |
+| **Local Model Runtime** | Ollama | *Planned* | Runs local open-source LLMs (e.g. Llama 3, Mistral) offline |
+| **Privacy Protection** | Microsoft Presidio + Custom Rules | *Planned* | PII detection, redaction, and data masking |
+| **Testing** | pytest | *Planned* | Automated backend, integration, and security tests |
+| **Version Control** | Git & GitHub | **Active** | Source control with safety guardrails |
 
-PostgreSQL full-text search is the proposed starting point for document retrieval. Semantic search using a local embedding model and pgvector may be added if evaluation shows that it is needed.
+---
 
 ## System Architecture
 
@@ -78,16 +88,16 @@ PostgreSQL full-text search is the proposed starting point for document retrieva
         Authentication and Authorization
                      |
                      v
-         Permission-Filtered Retrieval
+          Permission-Filtered Retrieval
                      |
                      v
-          Privacy Processing Pipeline
+           Privacy Processing Pipeline
                      |
                      v
-            Ollama + Local LLM
+             Ollama + Local LLM
                      |
                      v
-           Answer and Source References
+            Answer and Source References
                      |
                      v
                   Frontend
@@ -95,7 +105,7 @@ PostgreSQL full-text search is the proposed starting point for document retrieva
 
 Supporting workflows include document ingestion, access-request approval, audit logging, and security evaluation.
 
-### Document Ingestion
+### Document Ingestion Pipeline
 
 ```text
 PDF / DOCX Upload
@@ -104,20 +114,16 @@ PDF / DOCX Upload
 File Validation
         |
         v
-Text Extraction
+Text Extraction (PyMuPDF / python-docx)
         |
         v
-Text Chunking
+Text Chunking & Embedding Generation
         |
         v
-PostgreSQL Storage and Indexing
+PostgreSQL + pgvector Storage
 ```
 
-### Question Answering
-
-The application follows a Retrieval-Augmented Generation (RAG) approach. Relevant document chunks are retrieved and supplied as context to the language model, allowing it to generate answers grounded in the available documents.
-
-Document permissions are enforced before retrieval. Privacy filtering is an additional safeguard and does not replace authorization.
+---
 
 ## User Roles
 
@@ -127,129 +133,118 @@ Document permissions are enforced before retrieval. Privacy filtering is an addi
 
 Access is enforced by the backend. A user's role alone does not automatically grant access to every confidential document.
 
-## Security and Privacy Considerations
+---
 
-The project follows a local-first design, but local model execution alone does not guarantee complete security.
+## 📅 Implementation Status: Day 1 Complete
 
-The implementation aims to:
+### ✅ Implemented Today (Day 1)
+- [x] Standardized project folder hierarchy (`backend/`, `frontend/`, `database/`, `research/`).
+- [x] Python virtual environment (`.venv`) initialized inside `backend/`.
+- [x] Core dependencies (`FastAPI`, `Uvicorn`) installed and pinned in [`backend/requirements.txt`](backend/requirements.txt).
+- [x] Minimal FastAPI application in [`backend/app/main.py`](backend/app/main.py).
+- [x] Operational health check endpoint: `GET /health` -> `{"status": "ok"}`.
+- [x] Friendly root greeting endpoint: `GET /`.
+- [x] Auto-generated interactive API documentation (`/docs` via Swagger UI, `/redoc` via ReDoc).
+- [x] Comprehensive `.gitignore` protecting company files, secrets, virtual environments, and build artifacts.
 
-- Enforce permissions before retrieving document content.
-- Process sensitive information before sending context to the model.
-- Avoid external AI API fallbacks.
-- Protect original documents, extracted text, and transformation mappings.
-- Minimize sensitive information in logs.
-- Test security controls using predefined scenarios.
-- Measure privacy protection alongside answer quality.
-
-The system is a prototype and will not claim to eliminate every possible data leak or attack.
-
-## Evaluation Plan
-
-The system will be evaluated using fictional company documents and controlled test cases.
-
-Planned evaluation criteria include:
-
-- Retrieval of relevant document passages.
-- Answer correctness and source accuracy.
-- Detection of planted sensitive values.
-- Unauthorized document access attempts.
-- Resistance to selected prompt-injection attacks.
-- Response time and the effect of privacy filtering on answer quality.
-
-Results will be recorded from actual tests rather than assumed in advance.
-
-## Project Structure
-
-The following is the proposed structure; directories can be adjusted during implementation.
-
-```text
-safe-company-chatbot/
-├── frontend/
-│   ├── src/
-│   │   ├── components/
-│   │   ├── pages/
-│   │   ├── services/
-│   │   └── types/
-│   └── package.json
-├── backend/
-│   ├── app/
-│   │   ├── api/
-│   │   ├── auth/
-│   │   ├── database/
-│   │   ├── documents/
-│   │   ├── rag/
-│   │   ├── privacy/
-│   │   ├── security/
-│   │   └── main.py
-│   ├── tests/
-│   └── requirements.txt
-├── database/
-│   └── migrations/
-├── docs/
-│   ├── architecture.md
-│   └── database-design.md
-├── .gitignore
-└── README.md
-```
-
-## Getting Started
-
-### Prerequisites
-
-Install the following before running the application:
-
-- Python
-- Node.js and npm
-- PostgreSQL
-- Ollama
-- Git
-
-A compatible local language model must be downloaded before offline operation can be demonstrated.
-
-### Setup
-
-The installation instructions will be finalized as the application implementation progresses.
-
-The intended setup process is:
-
-1. Clone the repository.
-2. Configure the local PostgreSQL database.
-3. Set up the Python virtual environment and backend dependencies.
-4. Install frontend dependencies.
-5. Install and configure Ollama with a compatible local model.
-6. Configure local environment variables.
-7. Run the database migrations.
-8. Start the backend and frontend services.
-
-Do not commit passwords, API keys, local database credentials, or sensitive company documents to GitHub.
-
-## Current Status
-
-**Status: In development**
-
-The project is being designed around a local-first architecture with document retrieval, access control, privacy processing, and security evaluation.
-
-Implementation status will be updated as each component is completed and tested.
-
-## Future Improvements
-
-- Semantic retrieval using local embeddings and pgvector.
-- Support for additional document formats.
-- OCR for scanned PDFs.
-- More configurable privacy policies.
-- Improved retrieval and answer-quality evaluation.
-- Stronger audit controls and document-retention policies.
-
-## Team and Contributions
-
-This project is being developed collaboratively by a team of four. Work is organized through GitHub Issues, labels, branches, and pull requests.
-
-Each contribution should be reviewed and tested before merging into the main branch.
-
-## License
-
-A license will be added once the project team decides how the repository and its source code should be distributed.
+### ⏳ Planned for Upcoming Phases
+- [ ] **Phase 2:** PostgreSQL & `pgvector` database setup & migrations.
+- [ ] **Phase 3:** Document ingestion pipeline (parsing, chunking, and embedding generation).
+- [ ] **Phase 4:** Ollama integration & local LLM orchestration (RAG pipeline).
+- [ ] **Phase 5:** Role-Based Access Control (RBAC) & user authentication.
+- [ ] **Phase 6:** Privacy Guardrails (Presidio PII redaction, prompt injection defense).
+- [ ] **Phase 7:** React + Vite frontend web interface.
 
 ---
 
-**Note:** This project is intended for educational and prototype evaluation. It should not be used with real confidential company data until its security, privacy, and operational controls have been appropriately reviewed and validated.
+## 🚀 Getting Started (Day 1 Backend Setup)
+
+### 1. Prerequisites
+Ensure you have the following installed on your machine:
+- **Python**: Version 3.10+ (tested on Python 3.11.9)
+- **Git**: Version 2.x
+- **Node.js & npm**: (For future frontend phase)
+- **Ollama**: (For future local LLM phase)
+
+---
+
+### 2. Activate the Virtual Environment (Windows)
+
+Open **PowerShell** or **Command Prompt** and navigate to the `backend/` directory:
+
+```powershell
+cd backend
+```
+
+#### In PowerShell:
+```powershell
+.\.venv\Scripts\Activate.ps1
+```
+
+> **Note for PowerShell Users:**
+> If script execution is restricted, run this one-time command in PowerShell:
+> ```powershell
+> Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
+> ```
+
+#### In Command Prompt (`cmd.exe`):
+```cmd
+.venv\Scripts\activate.bat
+```
+
+Once activated, `(.venv)` will appear in your prompt prefix.
+
+---
+
+### 3. Install Dependencies
+
+If setting up on a fresh machine or teammate's clone:
+
+```bash
+pip install -r requirements.txt
+```
+
+---
+
+### 4. Run the Backend Server
+
+From the `backend/` directory (with `.venv` activated):
+
+```bash
+uvicorn app.main:app --reload
+```
+
+- `--reload` enables auto-reload so the server automatically refreshes whenever you edit Python files.
+
+---
+
+## 🔍 Verification & Endpoints
+
+| Resource | URL | Expected Response |
+|---|---|---|
+| **Health Check** | [http://127.0.0.1:8000/health](http://127.0.0.1:8000/health) | `{"status": "ok"}` |
+| **Root Welcome** | [http://127.0.0.1:8000/](http://127.0.0.1:8000/) | `{"message": "Welcome to Safe Company Chatbot API", ...}` |
+| **Interactive Docs (Swagger UI)** | [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs) | Interactive API exploration page |
+| **Alternative Docs (ReDoc)** | [http://127.0.0.1:8000/redoc](http://127.0.0.1:8000/redoc) | Clean documentation view |
+
+---
+
+## 🔒 Security and Privacy Considerations
+
+The project follows a strict local-first design:
+- **No External Cloud AI:** No employee prompts or document contents are ever transmitted to third-party cloud APIs.
+- **Git Protection:** `.gitignore` excludes company documents (`*.pdf`, `*.docx`), secrets (`.env`), vector caches, and virtual environments from version control.
+- **Permission Enforcement:** Permissions will be checked prior to context retrieval in future phases.
+- **Sensitive Data Redaction:** PII detection and masking will be applied prior to model ingestion.
+
+---
+
+## 👥 Team and Contributions
+
+This project is being developed collaboratively. Work is organized through GitHub Issues, labels, branches, and pull requests. Each contribution should be reviewed and tested before merging into the `main` branch.
+
+---
+
+## 📄 License
+
+A license will be added once the project team decides how the repository and its source code should be distributed.
