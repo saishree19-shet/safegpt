@@ -54,6 +54,8 @@ uploads/
 data/
 backend/data/
 backend/uploads/
+private_uploads/
+backend/private_uploads/
 *.pdf
 *.docx
 *.doc
