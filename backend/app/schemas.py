@@ -125,3 +125,24 @@ class ActionMessageResponse(BaseModel):
     document_id: int
     user_id: Optional[int] = None
 
+
+class DocumentTextPageResponse(BaseModel):
+    id: int
+    page_number: Optional[int] = None
+    text_content: str
+    char_count: int
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class DocumentTextResponse(BaseModel):
+    document_id: int
+    title: str
+    filename: str
+    total_pages: int
+    total_chars: int
+    pages: list[DocumentTextPageResponse]
+
+    model_config = ConfigDict(from_attributes=True)
+

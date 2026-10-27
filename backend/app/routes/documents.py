@@ -15,12 +15,14 @@ from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models import Document, DocumentPermission, User
+from app.models import Document, DocumentPermission, DocumentTextPage, User
 from app.schemas import (
     ActionMessageResponse,
     DocumentDetailResponse,
     DocumentPermissionResponse,
     DocumentResponse,
+    DocumentTextPageResponse,
+    DocumentTextResponse,
     DocumentUploadResponse,
     GrantPermissionRequest,
 )
@@ -177,6 +179,24 @@ def upload_document(
         )
 
         db.add(record)
+        # Flush to get the document ID without committing, so text pages
+        # can reference it and the entire transaction remains atomic.
+        db.flush()
+
+        # Persist each non-empty page as a DocumentTextPage record.
+        # For PDFs: page_number is the 1-indexed page number from PyMuPDF.
+        # For DOCX: page_number is NULL — python-docx does not provide
+        #           reliable page boundaries during extraction.
+        for item in pages:
+            if item["text"]:
+                text_content = item["text"]
+                db.add(DocumentTextPage(
+                    document_id=record.id,
+                    page_number=item["page"],
+                    text_content=text_content,
+                    char_count=len(text_content),
+                ))
+
         db.commit()
         db.refresh(record)
 
@@ -349,6 +369,95 @@ def get_document(
         created_at=doc.created_at,
         is_owner=is_owner,
         can_manage_permissions=can_manage,
+    )
+
+
+@router.get(
+    "/{document_id}/text",
+    response_model=DocumentTextResponse,
+    summary="Retrieve extracted text content for an authorized document",
+)
+def get_document_text(
+    document_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Return persisted extracted text pages for a document, ordered by page number.
+
+    Zero-trust authorization policy:
+    - The caller must be the document owner OR have an active explicit can_read=True
+      permission grant for this specific document.
+    - An administrator role alone does NOT grant access to the text of documents
+      they do not own or have no explicit read grant for.
+    - Extracted text is never exposed through the document-list or metadata endpoints.
+    - The authenticated user is always derived from the JWT; client-supplied user IDs
+      are never trusted.
+    - Revoked permissions (can_read=False or deleted permission) immediately block
+      subsequent requests.
+    - Nonexistent documents return 404 Not Found.
+    - Unauthorized users return 403 Forbidden with no content hints.
+    """
+    if document_id <= 0:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Document not found.",
+        )
+
+    doc = db.query(Document).filter(Document.id == document_id).first()
+    if not doc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Document not found.",
+        )
+
+    # Check read authorization: owner OR explicit active read grant only.
+    # Administrator role alone does not grant text read access.
+    is_owner = (doc.owner_id == current_user.id)
+
+    has_read_permission = False
+    if not is_owner:
+        perm = (
+            db.query(DocumentPermission)
+            .filter(
+                DocumentPermission.document_id == doc.id,
+                DocumentPermission.user_id == current_user.id,
+            )
+            .first()
+        )
+        has_read_permission = bool(perm and perm.can_read)
+
+    if not (is_owner or has_read_permission):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You do not have permission to access this document's text.",
+        )
+
+    text_pages = (
+        db.query(DocumentTextPage)
+        .filter(DocumentTextPage.document_id == doc.id)
+        .order_by(
+            DocumentTextPage.page_number.asc().nullsfirst()
+        )
+        .all()
+    )
+
+    return DocumentTextResponse(
+        document_id=doc.id,
+        title=doc.title,
+        filename=doc.filename,
+        total_pages=len(text_pages),
+        total_chars=sum(p.char_count for p in text_pages),
+        pages=[
+            DocumentTextPageResponse(
+                id=p.id,
+                page_number=p.page_number,
+                text_content=p.text_content,
+                char_count=p.char_count,
+                created_at=p.created_at,
+            )
+            for p in text_pages
+        ],
     )
 
 
