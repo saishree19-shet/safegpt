@@ -57,6 +57,12 @@ class Document(Base):
         back_populates="document",
         cascade="all, delete-orphan",
     )
+    text_pages = relationship(
+        "DocumentTextPage",
+        back_populates="document",
+        cascade="all, delete-orphan",
+        order_by="DocumentTextPage.page_number.asc().nullsfirst()",
+    )
 
 
 class DocumentPermission(Base):
@@ -85,4 +91,21 @@ class DocumentPermission(Base):
     document = relationship("Document", back_populates="permissions")
     user = relationship("User", foreign_keys=[user_id])
     granter = relationship("User", foreign_keys=[granted_by])
+
+
+class DocumentTextPage(Base):
+    __tablename__ = "document_text_pages"
+
+    id = Column(Integer, primary_key=True, index=True)
+    document_id = Column(
+        Integer, ForeignKey("documents.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    page_number = Column(Integer, nullable=True)  # 1-indexed for PDF; NULL for DOCX
+    text_content = Column(Text, nullable=False)
+    char_count = Column(Integer, nullable=False)
+    created_at = Column(
+        DateTime(timezone=True), nullable=False, default=utc_now
+    )
+
+    document = relationship("Document", back_populates="text_pages")
 

@@ -31,6 +31,7 @@ def test_postgres_schema_verification():
     assert "users" in table_names
     assert "documents" in table_names
     assert "document_permissions" in table_names
+    assert "document_text_pages" in table_names
 
     # Verify user columns
     user_cols = {c["name"] for c in inspector.get_columns("users")}
@@ -43,6 +44,17 @@ def test_postgres_schema_verification():
     password_hash_col = next(c for c in inspector.get_columns("users") if c["name"] == "password_hash")
     assert password_hash_col["nullable"] is False
 
+    # Verify document_text_pages columns
+    text_page_cols = {c["name"] for c in inspector.get_columns("document_text_pages")}
+    expected_text_page_cols = {
+        "id", "document_id", "page_number", "text_content", "char_count", "created_at"
+    }
+    assert expected_text_page_cols.issubset(text_page_cols)
+
+    # Verify page_number is nullable for DOCX compatibility
+    page_number_col = next(c for c in inspector.get_columns("document_text_pages") if c["name"] == "page_number")
+    assert page_number_col["nullable"] is True
+
 
 @pytest.mark.integration
 def test_postgres_data_unmodified_read_only():
@@ -51,6 +63,8 @@ def test_postgres_data_unmodified_read_only():
         user_count = conn.execute(text("SELECT count(*) FROM users")).scalar()
         doc_count = conn.execute(text("SELECT count(*) FROM documents")).scalar()
         perm_count = conn.execute(text("SELECT count(*) FROM document_permissions")).scalar()
+        page_count = conn.execute(text("SELECT count(*) FROM document_text_pages")).scalar()
         assert user_count >= 0
         assert doc_count >= 0
         assert perm_count >= 0
+        assert page_count >= 0

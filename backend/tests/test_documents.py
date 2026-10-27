@@ -15,7 +15,7 @@ except ImportError:
 
 from app.database import Base, get_db
 from app.main import app
-from app.models import Document, DocumentPermission, User
+from app.models import Document, DocumentPermission, DocumentTextPage, User
 from app.routes import documents as doc_module
 from app.security import create_access_token, hash_password
 
@@ -766,3 +766,346 @@ def test_grant_and_revoke_database_failure_handling(client, auth_headers, second
     assert "database error" in revoke_resp.json()["detail"].lower()
     # Ensure permission was NOT revoked due to rollback
     assert db_session.query(DocumentPermission).count() == 1
+
+
+# ============================================================================
+# EXTRACTED TEXT PERSISTENCE & RETRIEVAL TESTS
+# ============================================================================
+
+
+def make_two_page_pdf_bytes() -> tuple[bytes, str, str]:
+    """Create a valid two-page PDF. Returns (bytes, page1_text, page2_text)."""
+    page1_text = "Annual Report Page One Strategy Overview"
+    page2_text = "Financial Summary Quarter Two Results"
+    doc = fitz.open()
+    p1 = doc.new_page()
+    p1.insert_text((50, 72), page1_text)
+    p2 = doc.new_page()
+    p2.insert_text((50, 72), page2_text)
+    data = doc.tobytes()
+    doc.close()
+    return data, page1_text, page2_text
+
+
+def make_valid_docx_bytes_with_text(text: str = "Internal Policy Document Content") -> bytes:
+    doc = WordDocument()
+    doc.add_paragraph(text)
+    buf = io.BytesIO()
+    doc.save(buf)
+    return buf.getvalue()
+
+
+# ── 1. PDF text persistence: pages created with correct page numbers ──────────
+
+def test_upload_pdf_persists_text_pages_with_page_numbers(
+    client, auth_headers, isolated_storage, db_session
+):
+    """Uploading a PDF must persist one DocumentTextPage per page, 1-indexed."""
+    pdf_bytes, p1_text, p2_text = make_two_page_pdf_bytes()
+
+    resp = client.post(
+        "/documents/upload",
+        files={"file": ("report.pdf", pdf_bytes, "application/pdf")},
+        headers=auth_headers,
+    )
+    assert resp.status_code == 201
+    doc_id = resp.json()["document_id"]
+    assert resp.json()["page_count"] == 2
+
+    pages = (
+        db_session.query(DocumentTextPage)
+        .filter(DocumentTextPage.document_id == doc_id)
+        .order_by(DocumentTextPage.page_number)
+        .all()
+    )
+    assert len(pages) == 2
+    assert pages[0].page_number == 1
+    assert pages[1].page_number == 2
+    assert p1_text in pages[0].text_content
+    assert p2_text in pages[1].text_content
+    assert pages[0].char_count == len(pages[0].text_content)
+    assert pages[1].char_count == len(pages[1].text_content)
+
+
+# ── 2. DOCX text persistence: single record, page_number=None ─────────────────
+
+def test_upload_docx_persists_text_page_with_null_page_number(
+    client, auth_headers, isolated_storage, db_session
+):
+    """Uploading a DOCX must persist a single text page with page_number=NULL."""
+    docx_bytes = make_valid_docx_bytes_with_text("DOCX Policy Content Line One")
+
+    resp = client.post(
+        "/documents/upload",
+        files={"file": ("policy.docx", docx_bytes,
+                        "application/vnd.openxmlformats-officedocument.wordprocessingml.document")},
+        headers=auth_headers,
+    )
+    assert resp.status_code == 201
+    doc_id = resp.json()["document_id"]
+
+    pages = (
+        db_session.query(DocumentTextPage)
+        .filter(DocumentTextPage.document_id == doc_id)
+        .all()
+    )
+    assert len(pages) == 1
+    assert pages[0].page_number is None
+    assert "DOCX Policy Content Line One" in pages[0].text_content
+    assert pages[0].char_count == len(pages[0].text_content)
+
+
+# ── 3. Text retrieval: owner can retrieve full text with pages ─────────────────
+
+def test_owner_can_retrieve_document_text(
+    client, auth_headers, sample_document, test_user, db_session
+):
+    """Document owner must be able to retrieve all persisted text pages."""
+    # Seed two text pages for the sample_document
+    db_session.add(DocumentTextPage(
+        document_id=sample_document.id,
+        page_number=1,
+        text_content="Page one content here",
+        char_count=len("Page one content here"),
+    ))
+    db_session.add(DocumentTextPage(
+        document_id=sample_document.id,
+        page_number=2,
+        text_content="Page two content here",
+        char_count=len("Page two content here"),
+    ))
+    db_session.commit()
+
+    resp = client.get(f"/documents/{sample_document.id}/text", headers=auth_headers)
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["document_id"] == sample_document.id
+    assert data["title"] == sample_document.title
+    assert data["total_pages"] == 2
+    assert data["total_chars"] > 0
+    pages = data["pages"]
+    assert len(pages) == 2
+    assert pages[0]["page_number"] == 1
+    assert pages[1]["page_number"] == 2
+    assert "Page one content here" in pages[0]["text_content"]
+    assert "Page two content here" in pages[1]["text_content"]
+    # Verify char_count is accurate
+    assert pages[0]["char_count"] == len("Page one content here")
+
+
+# ── 4. Text retrieval: granted employee can read, unauthorized cannot ─────────
+
+def test_authorized_employee_can_read_text(
+    client, auth_headers, second_headers, second_user, sample_document, test_user, db_session
+):
+    """Employee with active can_read=True must be able to retrieve document text."""
+    db_session.add(DocumentTextPage(
+        document_id=sample_document.id,
+        page_number=None,
+        text_content="Confidential information for authorized users only",
+        char_count=len("Confidential information for authorized users only"),
+    ))
+    db_session.commit()
+
+    # Before grant: 403
+    assert client.get(
+        f"/documents/{sample_document.id}/text", headers=second_headers
+    ).status_code == 403
+
+    # Grant access
+    grant = client.post(
+        f"/documents/{sample_document.id}/permissions",
+        json={"user_id": second_user.id, "can_read": True},
+        headers=auth_headers,
+    )
+    assert grant.status_code == 201
+
+    # After grant: 200
+    resp = client.get(f"/documents/{sample_document.id}/text", headers=second_headers)
+    assert resp.status_code == 200
+    assert "Confidential information" in resp.json()["pages"][0]["text_content"]
+
+
+def test_unauthorized_employee_cannot_read_text(
+    client, second_headers, sample_document, db_session
+):
+    """Employee without an explicit permission must receive 403 on text endpoint."""
+    db_session.add(DocumentTextPage(
+        document_id=sample_document.id,
+        page_number=1,
+        text_content="Secret content that should not leak",
+        char_count=36,
+    ))
+    db_session.commit()
+
+    resp = client.get(f"/documents/{sample_document.id}/text", headers=second_headers)
+    assert resp.status_code == 403
+    # Confirm no text content leaks in the error response
+    body = resp.json()
+    assert "Secret" not in str(body)
+    assert "text_content" not in str(body)
+
+
+# ── 5. Permission revocation immediately blocks text retrieval ─────────────────
+
+def test_revoked_permission_immediately_blocks_text_retrieval(
+    client, auth_headers, second_headers, second_user, sample_document, test_user, db_session
+):
+    """Revoking a permission must immediately block subsequent text retrieval."""
+    db_session.add(DocumentTextPage(
+        document_id=sample_document.id,
+        page_number=1,
+        text_content="Top secret report content",
+        char_count=len("Top secret report content"),
+    ))
+    db_session.commit()
+
+    # Grant access
+    client.post(
+        f"/documents/{sample_document.id}/permissions",
+        json={"user_id": second_user.id, "can_read": True},
+        headers=auth_headers,
+    )
+    # Verify Bob can access text
+    assert client.get(
+        f"/documents/{sample_document.id}/text", headers=second_headers
+    ).status_code == 200
+
+    # Revoke access
+    revoke = client.delete(
+        f"/documents/{sample_document.id}/permissions/{second_user.id}",
+        headers=auth_headers,
+    )
+    assert revoke.status_code == 200
+
+    # Bob's text access is immediately denied
+    resp = client.get(f"/documents/{sample_document.id}/text", headers=second_headers)
+    assert resp.status_code == 403
+
+
+# ── 6. Zero-trust: admin without explicit grant cannot read text ───────────────
+
+def test_admin_without_grant_cannot_read_text(
+    client, admin_headers, sample_document, db_session
+):
+    """Administrator role alone must NOT grant access to confidential text."""
+    db_session.add(DocumentTextPage(
+        document_id=sample_document.id,
+        page_number=1,
+        text_content="Confidential executive strategy document",
+        char_count=len("Confidential executive strategy document"),
+    ))
+    db_session.commit()
+
+    resp = client.get(f"/documents/{sample_document.id}/text", headers=admin_headers)
+    assert resp.status_code == 403
+    assert "permission" in resp.json()["detail"].lower()
+    # Confirm no content leaks
+    assert "Confidential" not in str(resp.json())
+
+
+# ── 7. Missing document returns 404 ───────────────────────────────────────────
+
+def test_text_endpoint_returns_404_for_nonexistent_document(client, auth_headers):
+    """Text endpoint must return 404 for nonexistent document IDs."""
+    assert client.get("/documents/99999/text", headers=auth_headers).status_code == 404
+    assert client.get("/documents/0/text", headers=auth_headers).status_code == 404
+    assert client.get("/documents/-1/text", headers=auth_headers).status_code == 404
+
+
+# ── 8. Unauthenticated request is rejected ────────────────────────────────────
+
+def test_text_endpoint_requires_authentication(client, sample_document):
+    """Text endpoint must reject unauthenticated requests with 401."""
+    assert client.get(f"/documents/{sample_document.id}/text").status_code == 401
+    bad = {"Authorization": "Bearer not.a.valid.token"}
+    assert client.get(f"/documents/{sample_document.id}/text", headers=bad).status_code == 401
+
+
+# ── 9. Upload DB failure rolls back file AND text pages atomically ─────────────
+
+def test_upload_db_failure_rolls_back_text_pages_and_removes_file(
+    client, auth_headers, isolated_storage, db_session
+):
+    """
+    When the DB commit fails during upload, both the Document record and all
+    DocumentTextPage records must be rolled back, and the file on disk removed.
+    """
+    valid_pdf = make_valid_pdf_bytes("Important text that should not be persisted")
+
+    with patch.object(db_session, "commit", side_effect=Exception("DB commit failed")):
+        resp = client.post(
+            "/documents/upload",
+            files={"file": ("atomic_test.pdf", valid_pdf, "application/pdf")},
+            headers=auth_headers,
+        )
+
+    assert resp.status_code == 500
+    assert "Document upload failed" in resp.json()["detail"]
+
+    # No files left on disk
+    assert list(isolated_storage.glob("*")) == []
+    # No Document or DocumentTextPage records created
+    assert db_session.query(Document).count() == 0
+    assert db_session.query(DocumentTextPage).count() == 0
+
+
+# ── 10. Text pages are ordered correctly (page 1 before page 2) ───────────────
+
+def test_text_pages_returned_in_page_number_order(
+    client, auth_headers, sample_document, db_session
+):
+    """Text pages for PDF documents must be returned in ascending page number order."""
+    # Insert out of order to verify sorting
+    db_session.add(DocumentTextPage(
+        document_id=sample_document.id,
+        page_number=3,
+        text_content="Third page content",
+        char_count=18,
+    ))
+    db_session.add(DocumentTextPage(
+        document_id=sample_document.id,
+        page_number=1,
+        text_content="First page content",
+        char_count=18,
+    ))
+    db_session.add(DocumentTextPage(
+        document_id=sample_document.id,
+        page_number=2,
+        text_content="Second page content",
+        char_count=19,
+    ))
+    db_session.commit()
+
+    resp = client.get(f"/documents/{sample_document.id}/text", headers=auth_headers)
+    assert resp.status_code == 200
+    pages = resp.json()["pages"]
+    assert len(pages) == 3
+    assert pages[0]["page_number"] == 1
+    assert pages[1]["page_number"] == 2
+    assert pages[2]["page_number"] == 3
+
+
+# ── 11. DOCX text not exposed through metadata or list endpoints ───────────────
+
+def test_text_not_exposed_through_metadata_or_list_endpoints(
+    client, auth_headers, sample_document, db_session
+):
+    """Extracted text must never appear in /documents or /documents/{id} responses."""
+    db_session.add(DocumentTextPage(
+        document_id=sample_document.id,
+        page_number=None,
+        text_content="Sensitive internal content must not leak",
+        char_count=len("Sensitive internal content must not leak"),
+    ))
+    db_session.commit()
+
+    list_resp = client.get("/documents", headers=auth_headers)
+    assert list_resp.status_code == 200
+    assert "text_content" not in str(list_resp.json())
+    assert "Sensitive" not in str(list_resp.json())
+
+    meta_resp = client.get(f"/documents/{sample_document.id}", headers=auth_headers)
+    assert meta_resp.status_code == 200
+    assert "text_content" not in str(meta_resp.json())
+    assert "Sensitive" not in str(meta_resp.json())
