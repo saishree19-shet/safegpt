@@ -83,4 +83,6 @@ class DocumentPermission(Base):
     )
 
     document = relationship("Document", back_populates="permissions")
+    user = relationship("User", foreign_keys=[user_id])
+    granter = relationship("User", foreign_keys=[granted_by])
 

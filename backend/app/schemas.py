@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Optional
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 
@@ -61,3 +62,66 @@ class UserResponse(BaseModel):
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
+
+
+class DocumentUploadResponse(BaseModel):
+    message: str = "Document uploaded and text extracted successfully."
+    document_id: int
+    filename: str
+    size_bytes: int
+    page_count: Optional[int] = None
+    status: str = "uploaded"
+    extraction_status: str = "completed"
+
+
+class DocumentResponse(BaseModel):
+    id: int
+    title: str
+    filename: str
+    owner_id: int
+    status: str
+    created_at: datetime
+    is_owner: Optional[bool] = None
+    can_read: Optional[bool] = True
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class DocumentDetailResponse(BaseModel):
+    id: int
+    title: str
+    filename: str
+    owner_id: int
+    status: str
+    created_at: datetime
+    is_owner: bool
+    can_manage_permissions: bool
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class GrantPermissionRequest(BaseModel):
+    user_id: Optional[int] = None
+    email: Optional[EmailStr] = None
+    can_read: bool = True
+
+    model_config = ConfigDict(extra="ignore")
+
+
+class DocumentPermissionResponse(BaseModel):
+    id: int
+    document_id: int
+    user_id: int
+    user_email: Optional[str] = None
+    can_read: bool
+    granted_by: Optional[int] = None
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class ActionMessageResponse(BaseModel):
+    message: str
+    document_id: int
+    user_id: Optional[int] = None
+
