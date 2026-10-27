@@ -15,7 +15,7 @@ except ImportError:
 
 from app.database import Base, get_db
 from app.main import app
-from app.models import Document, User
+from app.models import Document, DocumentPermission, User
 from app.routes import documents as doc_module
 from app.security import create_access_token, hash_password
 
@@ -390,3 +390,379 @@ def test_upload_database_error_rolls_back_and_removes_file(client, auth_headers,
     # Crucial safety check: on DB error, newly written file is removed from disk
     assert list(isolated_storage.glob("*")) == []
     assert db_session.query(Document).count() == 0
+
+
+# ============================================================================
+# DOCUMENT ACCESS CONTROL FIXTURES & TESTS
+# ============================================================================
+
+@pytest.fixture(name="second_user")
+def fixture_second_user(db_session):
+    """Secondary employee user fixture for cross-user permission testing."""
+    user = User(
+        full_name="Bob Employee",
+        email="bob@company.com",
+        password_hash=hash_password("BobPassword123!"),
+        role="employee",
+        is_active=True,
+    )
+    db_session.add(user)
+    db_session.commit()
+    db_session.refresh(user)
+    return user
+
+
+@pytest.fixture(name="second_headers")
+def fixture_second_headers(second_user):
+    """Authorization headers for secondary employee user."""
+    token = create_access_token(data={"sub": str(second_user.id)})
+    return {"Authorization": f"Bearer {token}"}
+
+
+@pytest.fixture(name="admin_user")
+def fixture_admin_user(db_session):
+    """Administrator user fixture."""
+    user = User(
+        full_name="Carol Administrator",
+        email="admin@company.com",
+        password_hash=hash_password("AdminPassword123!"),
+        role="admin",
+        is_active=True,
+    )
+    db_session.add(user)
+    db_session.commit()
+    db_session.refresh(user)
+    return user
+
+
+@pytest.fixture(name="admin_headers")
+def fixture_admin_headers(admin_user):
+    """Authorization headers for administrator user."""
+    token = create_access_token(data={"sub": str(admin_user.id)})
+    return {"Authorization": f"Bearer {token}"}
+
+
+@pytest.fixture(name="sample_document")
+def fixture_sample_document(db_session, test_user, isolated_storage):
+    """A persisted test document owned by test_user (Alice)."""
+    file_path = isolated_storage / "sample_report.pdf"
+    file_path.write_bytes(b"%PDF-1.4 test document content")
+    doc = Document(
+        title="Quarterly Strategy Report.pdf",
+        filename="Quarterly Strategy Report.pdf",
+        storage_path=str(file_path),
+        owner_id=test_user.id,
+        status="uploaded",
+    )
+    db_session.add(doc)
+    db_session.commit()
+    db_session.refresh(doc)
+    return doc
+
+
+# 1. Document Owner Access
+def test_list_documents_owner_sees_own_documents(client, auth_headers, sample_document):
+    response = client.get("/documents", headers=auth_headers)
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data) == 1
+    assert data[0]["id"] == sample_document.id
+    assert data[0]["title"] == "Quarterly Strategy Report.pdf"
+    assert data[0]["is_owner"] is True
+    assert data[0]["can_read"] is True
+
+
+def test_get_document_owner_access(client, auth_headers, sample_document):
+    response = client.get(f"/documents/{sample_document.id}", headers=auth_headers)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["id"] == sample_document.id
+    assert data["title"] == "Quarterly Strategy Report.pdf"
+    assert data["is_owner"] is True
+    assert data["can_manage_permissions"] is True
+    # Verify sensitive internals are not exposed
+    assert "storage_path" not in data
+    assert "text" not in data
+    assert "password" not in data
+
+
+# 2. Authorized vs Unauthorized Employees
+def test_unauthorized_employee_cannot_list_or_access_document(client, second_headers, sample_document):
+    # Bob should not see Alice's document in the document list
+    list_resp = client.get("/documents", headers=second_headers)
+    assert list_resp.status_code == 200
+    assert list_resp.json() == []
+
+    # Direct access by ID must return 403 Forbidden to prevent IDOR
+    get_resp = client.get(f"/documents/{sample_document.id}", headers=second_headers)
+    assert get_resp.status_code == 403
+    assert "do not have permission" in get_resp.json()["detail"].lower()
+
+
+def test_authorized_employee_can_list_and_access_document(client, auth_headers, second_headers, second_user, sample_document):
+    # Alice grants access to Bob
+    grant_resp = client.post(
+        f"/documents/{sample_document.id}/permissions",
+        json={"user_id": second_user.id, "can_read": True},
+        headers=auth_headers,
+    )
+    assert grant_resp.status_code == 201
+
+    # Bob can now see the document in list
+    list_resp = client.get("/documents", headers=second_headers)
+    assert list_resp.status_code == 200
+    docs = list_resp.json()
+    assert len(docs) == 1
+    assert docs[0]["id"] == sample_document.id
+    assert docs[0]["is_owner"] is False
+    assert docs[0]["can_read"] is True
+
+    # Bob can retrieve safe metadata
+    get_resp = client.get(f"/documents/{sample_document.id}", headers=second_headers)
+    assert get_resp.status_code == 200
+    data = get_resp.json()
+    assert data["id"] == sample_document.id
+    assert data["is_owner"] is False
+    assert data["can_manage_permissions"] is False
+
+
+def test_authorized_employee_cannot_manage_permissions(client, second_headers, second_user, auth_headers, test_user, sample_document, db_session):
+    # Grant Bob read access first
+    perm = DocumentPermission(
+        document_id=sample_document.id,
+        user_id=second_user.id,
+        can_read=True,
+        granted_by=test_user.id,
+    )
+    db_session.add(perm)
+    db_session.commit()
+
+    # Bob attempts to grant permission on Alice's document -> Forbidden
+    grant_resp = client.post(
+        f"/documents/{sample_document.id}/permissions",
+        json={"email": "alice@company.com", "can_read": True},
+        headers=second_headers,
+    )
+    assert grant_resp.status_code == 403
+
+    # Bob attempts to revoke permission on Alice's document -> Forbidden
+    revoke_resp = client.delete(
+        f"/documents/{sample_document.id}/permissions/{second_user.id}",
+        headers=second_headers,
+    )
+    assert revoke_resp.status_code == 403
+
+
+# 3. Administrator Permissions
+def test_administrator_permissions(client, admin_headers, sample_document, second_user):
+    # Admin can view document metadata
+    get_resp = client.get(f"/documents/{sample_document.id}", headers=admin_headers)
+    assert get_resp.status_code == 200
+    data = get_resp.json()
+    assert data["id"] == sample_document.id
+    assert data["is_owner"] is False
+    assert data["can_manage_permissions"] is True
+
+    # Admin can list system documents with policy flags
+    list_resp = client.get("/documents", headers=admin_headers)
+    assert list_resp.status_code == 200
+    assert any(d["id"] == sample_document.id for d in list_resp.json())
+
+    # Admin can grant access to an employee on a document owned by someone else
+    grant_resp = client.post(
+        f"/documents/{sample_document.id}/permissions",
+        json={"user_id": second_user.id, "can_read": True},
+        headers=admin_headers,
+    )
+    assert grant_resp.status_code == 201
+    assert grant_resp.json()["can_read"] is True
+
+    # Admin can revoke access from that employee
+    revoke_resp = client.delete(
+        f"/documents/{sample_document.id}/permissions/{second_user.id}",
+        headers=admin_headers,
+    )
+    assert revoke_resp.status_code == 200
+    assert revoke_resp.json()["user_id"] == second_user.id
+
+
+# 4. Grant and Revoke Operations
+def test_grant_permission_by_email_and_user_id(client, auth_headers, second_user, sample_document):
+    # Grant via email
+    resp_email = client.post(
+        f"/documents/{sample_document.id}/permissions",
+        json={"email": "bob@company.com", "can_read": True},
+        headers=auth_headers,
+    )
+    assert resp_email.status_code == 201
+    assert resp_email.json()["user_email"] == "bob@company.com"
+    assert resp_email.json()["user_id"] == second_user.id
+
+    # Duplicate grant updates existing permission idempotently
+    resp_update = client.post(
+        f"/documents/{sample_document.id}/permissions",
+        json={"user_id": second_user.id, "can_read": False},
+        headers=auth_headers,
+    )
+    assert resp_update.status_code == 201
+    assert resp_update.json()["can_read"] is False
+
+
+def test_revocation_takes_effect_immediately(client, auth_headers, second_headers, second_user, sample_document):
+    # Grant access
+    client.post(
+        f"/documents/{sample_document.id}/permissions",
+        json={"user_id": second_user.id, "can_read": True},
+        headers=auth_headers,
+    )
+
+    # Bob can access
+    assert client.get(f"/documents/{sample_document.id}", headers=second_headers).status_code == 200
+
+    # Owner revokes access
+    revoke_resp = client.delete(
+        f"/documents/{sample_document.id}/permissions/{second_user.id}",
+        headers=auth_headers,
+    )
+    assert revoke_resp.status_code == 200
+
+    # Bob's access is immediately denied
+    assert client.get(f"/documents/{sample_document.id}", headers=second_headers).status_code == 403
+    assert client.get("/documents", headers=second_headers).json() == []
+
+
+# 5. Invalid IDs and Error Handling
+def test_invalid_document_and_user_ids(client, auth_headers, second_user, sample_document):
+    # Nonexistent document ID
+    assert client.get("/documents/99999", headers=auth_headers).status_code == 404
+    assert client.get("/documents/0", headers=auth_headers).status_code == 404
+    assert client.get("/documents/-5", headers=auth_headers).status_code == 404
+
+    # Grant on nonexistent document
+    assert client.post(
+        "/documents/99999/permissions",
+        json={"user_id": second_user.id},
+        headers=auth_headers,
+    ).status_code == 404
+
+    # Grant with nonexistent user_id
+    assert client.post(
+        f"/documents/{sample_document.id}/permissions",
+        json={"user_id": 99999},
+        headers=auth_headers,
+    ).status_code == 404
+
+    # Grant with nonexistent email
+    assert client.post(
+        f"/documents/{sample_document.id}/permissions",
+        json={"email": "nonexistent@company.com"},
+        headers=auth_headers,
+    ).status_code == 404
+
+    # Grant with missing user_id and email
+    assert client.post(
+        f"/documents/{sample_document.id}/permissions",
+        json={"can_read": True},
+        headers=auth_headers,
+    ).status_code == 400
+
+    # Revoke on nonexistent document
+    assert client.delete(
+        f"/documents/99999/permissions/{second_user.id}",
+        headers=auth_headers,
+    ).status_code == 404
+
+    # Revoke on nonexistent user
+    assert client.delete(
+        f"/documents/{sample_document.id}/permissions/99999",
+        headers=auth_headers,
+    ).status_code == 404
+
+    # Revoke when permission does not exist
+    assert client.delete(
+        f"/documents/{sample_document.id}/permissions/{second_user.id}",
+        headers=auth_headers,
+    ).status_code == 404
+
+    # Revoke on document owner rejected
+    assert client.delete(
+        f"/documents/{sample_document.id}/permissions/{sample_document.owner_id}",
+        headers=auth_headers,
+    ).status_code == 400
+
+
+# 6. Privilege Escalation Attempts
+def test_privilege_escalation_prevented(client, auth_headers, admin_headers, test_user, admin_user, sample_document):
+    # User cannot grant permission to themselves
+    resp_self = client.post(
+        f"/documents/{sample_document.id}/permissions",
+        json={"user_id": test_user.id, "can_read": True},
+        headers=auth_headers,
+    )
+    assert resp_self.status_code == 400
+    assert "themselves" in resp_self.json()["detail"].lower()
+
+    # Admin cannot grant permission to themselves
+    resp_admin_self = client.post(
+        f"/documents/{sample_document.id}/permissions",
+        json={"user_id": admin_user.id, "can_read": True},
+        headers=admin_headers,
+    )
+    assert resp_admin_self.status_code == 400
+    assert "themselves" in resp_admin_self.json()["detail"].lower()
+
+    # Granting to document owner rejected
+    resp_owner = client.post(
+        f"/documents/{sample_document.id}/permissions",
+        json={"email": test_user.email, "can_read": True},
+        headers=admin_headers,
+    )
+    assert resp_owner.status_code == 400
+    assert "owner already has" in resp_owner.json()["detail"].lower()
+
+
+# 7. Unauthenticated Requests
+def test_unauthenticated_requests_rejected(client, sample_document):
+    assert client.get("/documents").status_code == 401
+    assert client.get(f"/documents/{sample_document.id}").status_code == 401
+    assert client.post(f"/documents/{sample_document.id}/permissions", json={"user_id": 1}).status_code == 401
+    assert client.delete(f"/documents/{sample_document.id}/permissions/1").status_code == 401
+
+    # Invalid token rejected
+    bad_headers = {"Authorization": "Bearer not.a.valid.jwt.token"}
+    assert client.get("/documents", headers=bad_headers).status_code == 401
+
+
+# 8. Database Failure Handling
+def test_grant_and_revoke_database_failure_handling(client, auth_headers, second_user, sample_document, db_session):
+    # Grant failure rolls back and returns 500
+    with patch.object(db_session, "commit", side_effect=Exception("Database commit failed")):
+        grant_resp = client.post(
+            f"/documents/{sample_document.id}/permissions",
+            json={"user_id": second_user.id, "can_read": True},
+            headers=auth_headers,
+        )
+    assert grant_resp.status_code == 500
+    assert "database error" in grant_resp.json()["detail"].lower()
+    assert db_session.query(DocumentPermission).count() == 0
+
+    # Create permission successfully
+    perm = DocumentPermission(
+        document_id=sample_document.id,
+        user_id=second_user.id,
+        can_read=True,
+        granted_by=sample_document.owner_id,
+    )
+    db_session.add(perm)
+    db_session.commit()
+
+    # Revoke failure rolls back and returns 500
+    with patch.object(db_session, "commit", side_effect=Exception("Database commit failed")):
+        revoke_resp = client.delete(
+            f"/documents/{sample_document.id}/permissions/{second_user.id}",
+            headers=auth_headers,
+        )
+    assert revoke_resp.status_code == 500
+    assert "database error" in revoke_resp.json()["detail"].lower()
+    # Ensure permission was NOT revoked due to rollback
+    assert db_session.query(DocumentPermission).count() == 1
