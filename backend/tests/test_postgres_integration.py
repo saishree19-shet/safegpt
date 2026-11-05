@@ -32,6 +32,8 @@ def test_postgres_schema_verification():
     assert "documents" in table_names
     assert "document_permissions" in table_names
     assert "document_text_pages" in table_names
+    assert "document_chunks" in table_names
+    assert "sanitized_chunks" in table_names
 
     # Verify user columns
     user_cols = {c["name"] for c in inspector.get_columns("users")}
@@ -64,7 +66,11 @@ def test_postgres_data_unmodified_read_only():
         doc_count = conn.execute(text("SELECT count(*) FROM documents")).scalar()
         perm_count = conn.execute(text("SELECT count(*) FROM document_permissions")).scalar()
         page_count = conn.execute(text("SELECT count(*) FROM document_text_pages")).scalar()
+        chunk_count = conn.execute(text("SELECT count(*) FROM document_chunks")).scalar()
+        sanitized_count = conn.execute(text("SELECT count(*) FROM sanitized_chunks")).scalar()
         assert user_count >= 0
         assert doc_count >= 0
         assert perm_count >= 0
         assert page_count >= 0
+        assert chunk_count >= 0
+        assert sanitized_count >= 0
