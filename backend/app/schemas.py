@@ -35,7 +35,6 @@ class SignupRequest(BaseModel):
         return v
 
 
-
 class LoginRequest(BaseModel):
     email: EmailStr
     password: str = Field(..., min_length=1)
@@ -72,6 +71,8 @@ class DocumentUploadResponse(BaseModel):
     page_count: Optional[int] = None
     status: str = "uploaded"
     extraction_status: str = "completed"
+    chunk_count: Optional[int] = None
+    embedding_status: Optional[str] = None
 
 
 class DocumentResponse(BaseModel):
@@ -146,3 +147,131 @@ class DocumentTextResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+
+class DocumentChunkResponse(BaseModel):
+    """Safe chunk response schema. Raw embedding arrays are strictly omitted."""
+    id: int
+    document_id: int
+    page_number: Optional[int] = None
+    chunk_index: int
+    chunk_text: str
+    start_char: int
+    end_char: int
+    embedding_model: str
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class ReprocessDocumentResponse(BaseModel):
+    message: str = "Document reprocessed and embedded successfully."
+    document_id: int
+    chunk_count: int
+    embedding_model: str
+    embedding_status: str = "completed"
+
+
+# ---------------------------------------------------------------------------
+# RAG / Semantic Search schemas
+# ---------------------------------------------------------------------------
+
+class SearchRequest(BaseModel):
+    """Request body for POST /rag/search."""
+
+    query: str = Field(..., min_length=1, max_length=1000)
+    top_k: int = Field(default=5, ge=1, le=20)
+    similarity_threshold: Optional[float] = Field(default=None, ge=0.0, le=1.0)
+
+    model_config = ConfigDict(extra="ignore")
+
+    @field_validator("query")
+    @classmethod
+    def strip_query(cls, v: str) -> str:
+        stripped = v.strip()
+        if not stripped:
+            raise ValueError("Query must not be blank or contain only whitespace.")
+        return stripped
+
+
+class SearchResultItem(BaseModel):
+    """A single retrieved chunk result. Raw embedding arrays are strictly omitted."""
+
+    chunk_id: int
+    document_id: int
+    filename: str
+    page_number: Optional[int] = None
+    chunk_index: int
+    chunk_text: str
+    similarity_score: float
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class SearchResponse(BaseModel):
+    """Response body for POST /rag/search."""
+
+    query: str
+    results: list[SearchResultItem]
+    total_results: int
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+# ---------------------------------------------------------------------------
+# RAG Answer Generation Schemas (Step 4)
+# ---------------------------------------------------------------------------
+
+class SourceCitation(BaseModel):
+    """A verified source citation derived directly from retrieved chunks."""
+
+    source_id: Optional[str] = None
+    document_id: int
+    filename: str
+    chunk_id: int
+    page_number: Optional[int] = None
+    chunk_index: int
+    similarity_score: float
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class VerifiedClaim(BaseModel):
+    """A claim verified against retrieved sanitized document evidence."""
+
+    text: str
+    status: str = "supported"  # "supported" | "partially_supported" | "unsupported"
+    source_ids: list[str] = Field(default_factory=list)
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class AnswerRequest(BaseModel):
+    """Request payload for POST /rag/answer."""
+
+    question: str = Field(..., min_length=1, max_length=1000)
+    top_k: int = Field(default=5, ge=1, le=20)
+    similarity_threshold: Optional[float] = Field(default=None, ge=0.0, le=1.0)
+
+    model_config = ConfigDict(extra="ignore")
+
+    @field_validator("question")
+    @classmethod
+    def strip_question(cls, v: str) -> str:
+        stripped = v.strip()
+        if not stripped:
+            raise ValueError("Question must not be blank or contain only whitespace.")
+        return stripped
+
+
+class AnswerResponse(BaseModel):
+    """Response payload for POST /rag/answer."""
+
+    question: str
+    answer: str
+    evidence_status: str = "supported"  # "supported" | "partially_supported" | "insufficient_evidence"
+    claims: list[VerifiedClaim] = Field(default_factory=list)
+    sources: list[SourceCitation]
+    model: str
+    used_context_chunks: int
+
+    model_config = ConfigDict(from_attributes=True)

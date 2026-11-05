@@ -3,6 +3,18 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.orm import Session
 
+from app.audit import (
+    ACCOUNT_INACTIVE_ACCESS,
+    LOGIN_FAILURE,
+    LOGIN_SUCCESS,
+    RESOURCE_SESSION,
+    RESOURCE_USER,
+    SIGNUP_SUCCESS,
+    STATUS_DENIED,
+    STATUS_FAILURE,
+    STATUS_SUCCESS,
+    log_event,
+)
 from app.database import get_db
 from app.models import User
 from app.schemas import LoginRequest, SignupRequest, TokenResponse, UserResponse
@@ -39,6 +51,7 @@ def is_email_unique_violation(err: IntegrityError) -> bool:
 )
 def signup(
     payload: SignupRequest,
+    request: Request,
     db: Session = Depends(get_db)
 ):
     """
@@ -49,6 +62,8 @@ def signup(
     - Hashes password using Argon2.
     - Strictly assigns the 'employee' role.
     """
+    client_ip = request.client.host if request.client else None
+    user_agent = request.headers.get("user-agent")
     normalized_email = payload.email.strip().lower()
 
     # Pre-check existing user
@@ -84,6 +99,25 @@ def signup(
 
     try:
         db.add(new_user)
+        db.flush()
+
+        # Audit: SIGNUP_SUCCESS
+        rec = log_event(
+            db,
+            event_type=SIGNUP_SUCCESS,
+            event_status=STATUS_SUCCESS,
+            user_id=new_user.id,
+            resource_type=RESOURCE_USER,
+            resource_id=new_user.id,
+            ip_address=client_ip,
+            user_agent=user_agent,
+        )
+        if rec is None:
+            db.rollback()
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Security audit logging failed; signup aborted.",
+            )
         db.commit()
         db.refresh(new_user)
     except IntegrityError as err:
@@ -128,9 +162,10 @@ def login(
     - Checks that user account is active.
     - Generates and returns a signed JWT access token.
     """
-    client_ip = request.client.host if request.client else "127.0.0.1"
+    client_ip = request.client.host if request.client else None
+    user_agent = request.headers.get("user-agent")
 
-    if not login_rate_limiter.is_allowed(client_ip):
+    if not login_rate_limiter.is_allowed(client_ip or "unknown"):
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             detail="Too many login attempts. Please try again later.",
@@ -159,6 +194,22 @@ def login(
         is_password_valid = False
 
     if not is_password_valid:
+        # Audit: LOGIN_FAILURE (no user_id — email enumeration prevention)
+        log_event(
+            db,
+            event_type=LOGIN_FAILURE,
+            event_status=STATUS_FAILURE,
+            user_id=None,
+            resource_type=RESOURCE_SESSION,
+            ip_address=client_ip,
+            user_agent=user_agent,
+            details={"reason": "invalid_credentials"},
+        )
+        try:
+            db.commit()
+        except SQLAlchemyError:
+            db.rollback()
+
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid email or password",
@@ -166,6 +217,22 @@ def login(
         )
 
     if not user.is_active:
+        # Audit: ACCOUNT_INACTIVE_ACCESS
+        log_event(
+            db,
+            event_type=ACCOUNT_INACTIVE_ACCESS,
+            event_status=STATUS_DENIED,
+            user_id=user.id,
+            resource_type=RESOURCE_SESSION,
+            ip_address=client_ip,
+            user_agent=user_agent,
+            details={"reason": "account_inactive"},
+        )
+        try:
+            db.commit()
+        except SQLAlchemyError:
+            db.rollback()
+
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Account is inactive. Please contact an administrator.",
@@ -174,11 +241,35 @@ def login(
 
     access_token = create_access_token(data={"sub": str(user.id)})
 
+    # Audit: LOGIN_SUCCESS
+    rec = log_event(
+        db,
+        event_type=LOGIN_SUCCESS,
+        event_status=STATUS_SUCCESS,
+        user_id=user.id,
+        resource_type=RESOURCE_SESSION,
+        ip_address=client_ip,
+        user_agent=user_agent,
+    )
+    if rec is None:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Security audit logging failed; login aborted.",
+        )
+    try:
+        db.commit()
+    except SQLAlchemyError:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Security audit logging failed; login aborted.",
+        )
+
     return TokenResponse(
         access_token=access_token,
         token_type="bearer"
     )
-
 
 
 @router.get(

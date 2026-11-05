@@ -1,4 +1,5 @@
 import io
+import logging
 import os
 import uuid
 from pathlib import Path
@@ -15,9 +16,28 @@ from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models import Document, DocumentPermission, DocumentTextPage, User
+from app.models import Document, DocumentChunk, DocumentPermission, DocumentTextPage, User
+from app.audit import (
+    DOCUMENT_PERMISSION_GRANTED,
+    DOCUMENT_PERMISSION_REVOKED,
+    DOCUMENT_READ,
+    DOCUMENT_UPLOAD,
+    RESOURCE_DOCUMENT,
+    STATUS_FAILURE,
+    STATUS_SUCCESS,
+    UNAUTHORIZED_DOCUMENT_ACCESS,
+    STATUS_DENIED,
+    log_event,
+)
+from app.rag import (
+    EmbeddingError,
+    OllamaConnectionError,
+    ingest_document_chunks_and_embeddings,
+    reprocess_document_chunks_and_embeddings,
+)
 from app.schemas import (
     ActionMessageResponse,
+    DocumentChunkResponse,
     DocumentDetailResponse,
     DocumentPermissionResponse,
     DocumentResponse,
@@ -25,8 +45,11 @@ from app.schemas import (
     DocumentTextResponse,
     DocumentUploadResponse,
     GrantPermissionRequest,
+    ReprocessDocumentResponse,
 )
 from app.security import get_current_user
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/documents", tags=["Documents"])
 
@@ -80,7 +103,8 @@ def extract_docx_text(file_path: Path) -> list[dict]:
             if paragraph.text.strip()
         )
 
-        # DOCX paragraphs do not have reliable page numbers.
+        # DOCX paragraphs do not have reliable physical page numbers.
+        # Page reference is preserved as None when boundaries cannot be determined.
         return [{"page": None, "text": text}]
     except Exception:
         raise HTTPException(
@@ -101,13 +125,14 @@ def upload_document(
     db: Session = Depends(get_db),
 ):
     """
-    Secure document upload endpoint.
+    Secure document upload and ingestion endpoint.
     - Requires authenticated user via Bearer token.
     - Accepts only PDF (.pdf) and Word (.docx) files.
     - Enforces file size limit while streaming to disk.
     - Safely extracts text without exposing contents publicly.
+    - Chunks text into overlapping windows and generates dense 768-dim embeddings.
     - Stores file with random UUID filename in private directory.
-    - Cleans up uploaded files and rolls back DB on any failure.
+    - Rolls back DB transaction and cleans up disk files on any failure.
     """
     original_name = Path(file.filename or "").name
     extension = Path(original_name).suffix.lower()
@@ -184,9 +209,6 @@ def upload_document(
         db.flush()
 
         # Persist each non-empty page as a DocumentTextPage record.
-        # For PDFs: page_number is the 1-indexed page number from PyMuPDF.
-        # For DOCX: page_number is NULL — python-docx does not provide
-        #           reliable page boundaries during extraction.
         for item in pages:
             if item["text"]:
                 text_content = item["text"]
@@ -197,6 +219,53 @@ def upload_document(
                     char_count=len(text_content),
                 ))
 
+        db.flush()
+
+        # Ingest chunks and embeddings for semantic search
+        chunk_count = 0
+        embedding_status = "pending"
+        try:
+            stored_chunks = ingest_document_chunks_and_embeddings(record.id, db)
+            chunk_count = len(stored_chunks)
+            embedding_status = "completed" if chunk_count > 0 else "no_text"
+        except OllamaConnectionError as err:
+            logger.warning(
+                "Ollama embedding service unavailable during upload for doc %d: %s",
+                record.id,
+                err,
+            )
+            embedding_status = "service_unavailable"
+        except EmbeddingError as err:
+            logger.error(
+                "Embedding generation failed during upload for doc %d: %s",
+                record.id,
+                err,
+            )
+            embedding_status = "failed"
+
+        # Audit: DOCUMENT_UPLOAD
+        rec = log_event(
+            db,
+            event_type=DOCUMENT_UPLOAD,
+            event_status=STATUS_SUCCESS,
+            user_id=current_user.id,
+            resource_type=RESOURCE_DOCUMENT,
+            resource_id=record.id,
+            details={
+                "size_bytes": size,
+                "chunk_count": chunk_count,
+                "file_extension": extension,
+                "embedding_status": embedding_status,
+            },
+        )
+        if rec is None:
+            db.rollback()
+            if stored_path.exists():
+                stored_path.unlink(missing_ok=True)
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Security audit logging failed; upload aborted.",
+            )
         db.commit()
         db.refresh(record)
 
@@ -208,6 +277,8 @@ def upload_document(
             page_count=len(pages) if extension == ".pdf" else None,
             status=record.status,
             extraction_status="completed",
+            chunk_count=chunk_count,
+            embedding_status=embedding_status,
         )
 
     except HTTPException:
@@ -321,7 +392,7 @@ def get_document(
     """
     Retrieve safe metadata after verifying server-side authorization.
     - Prevents IDOR vulnerabilities by strictly checking permissions on the server.
-    - Safe metadata only; never exposes storage_path, extracted text, or credentials.
+    - Safe metadata only; never exposes storage_path, extracted text, chunks, or credentials.
     - Authorized users: Document owners, users with granted read permission, or administrators.
     - Unauthorized employees receive 403 Forbidden.
     - Nonexistent documents receive 404 Not Found.
@@ -355,9 +426,47 @@ def get_document(
         has_read_permission = bool(perm and perm.can_read)
 
     if not (is_owner or has_read_permission or can_manage):
+        # Audit: UNAUTHORIZED_DOCUMENT_ACCESS
+        log_event(
+            db,
+            event_type=UNAUTHORIZED_DOCUMENT_ACCESS,
+            event_status=STATUS_DENIED,
+            user_id=current_user.id,
+            resource_type=RESOURCE_DOCUMENT,
+            resource_id=document_id,
+        )
+        try:
+            db.commit()
+        except Exception:
+            db.rollback()
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You do not have permission to access this document.",
+        )
+
+    # Audit: DOCUMENT_READ
+    rec = log_event(
+        db,
+        event_type=DOCUMENT_READ,
+        event_status=STATUS_SUCCESS,
+        user_id=current_user.id,
+        resource_type=RESOURCE_DOCUMENT,
+        resource_id=document_id,
+        details={"is_owner": is_owner},
+    )
+    if rec is None:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Security audit logging failed; operation aborted.",
+        )
+    try:
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Security audit logging failed; operation aborted.",
         )
 
     return DocumentDetailResponse(
@@ -391,10 +500,7 @@ def get_document_text(
     - An administrator role alone does NOT grant access to the text of documents
       they do not own or have no explicit read grant for.
     - Extracted text is never exposed through the document-list or metadata endpoints.
-    - The authenticated user is always derived from the JWT; client-supplied user IDs
-      are never trusted.
-    - Revoked permissions (can_read=False or deleted permission) immediately block
-      subsequent requests.
+    - Revoked permissions immediately block subsequent requests.
     - Nonexistent documents return 404 Not Found.
     - Unauthorized users return 403 Forbidden with no content hints.
     """
@@ -411,8 +517,6 @@ def get_document_text(
             detail="Document not found.",
         )
 
-    # Check read authorization: owner OR explicit active read grant only.
-    # Administrator role alone does not grant text read access.
     is_owner = (doc.owner_id == current_user.id)
 
     has_read_permission = False
@@ -459,6 +563,136 @@ def get_document_text(
             for p in text_pages
         ],
     )
+
+
+@router.get(
+    "/{document_id}/chunks",
+    response_model=list[DocumentChunkResponse],
+    summary="Retrieve safe chunk metadata for an authorized document",
+)
+def get_document_chunks(
+    document_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Retrieve chunk metadata for an authorized document.
+    - Security rule: Raw embedding vectors are strictly omitted from the response.
+    - Zero-trust authorization: Only document owners or users with explicit can_read grants.
+    """
+    if document_id <= 0:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Document not found.",
+        )
+
+    doc = db.query(Document).filter(Document.id == document_id).first()
+    if not doc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Document not found.",
+        )
+
+    is_owner = (doc.owner_id == current_user.id)
+    has_read_permission = False
+    if not is_owner:
+        perm = (
+            db.query(DocumentPermission)
+            .filter(
+                DocumentPermission.document_id == doc.id,
+                DocumentPermission.user_id == current_user.id,
+            )
+            .first()
+        )
+        has_read_permission = bool(perm and perm.can_read)
+
+    if not (is_owner or has_read_permission):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You do not have permission to access this document's chunks.",
+        )
+
+    chunks = (
+        db.query(DocumentChunk)
+        .filter(DocumentChunk.document_id == doc.id)
+        .order_by(DocumentChunk.chunk_index.asc())
+        .all()
+    )
+
+    return chunks
+
+
+@router.post(
+    "/{document_id}/reprocess",
+    response_model=ReprocessDocumentResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Atomically reprocess document chunks and embeddings",
+)
+def reprocess_document(
+    document_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Atomically reprocess document chunks and embeddings.
+    - Restricted to the document owner or an authorized administrator.
+    - Generates and validates new embeddings before replacing old records.
+    - If embedding generation or validation fails, old records are preserved intact.
+    """
+    if document_id <= 0:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Document not found.",
+        )
+
+    doc = db.query(Document).filter(Document.id == document_id).first()
+    if not doc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Document not found.",
+        )
+
+    can_manage = (doc.owner_id == current_user.id) or (current_user.role == "admin")
+    if not can_manage:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You do not have permission to reprocess this document.",
+        )
+
+    try:
+        new_chunks = reprocess_document_chunks_and_embeddings(doc.id, db)
+        db.commit()
+        return ReprocessDocumentResponse(
+            message="Document reprocessed and embedded successfully.",
+            document_id=doc.id,
+            chunk_count=len(new_chunks),
+            embedding_model=new_chunks[0].embedding_model if new_chunks else "nomic-embed-text",
+            embedding_status="completed",
+        )
+    except OllamaConnectionError as err:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Embedding service unavailable: {str(err)}",
+        )
+    except EmbeddingError as err:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=f"Embedding generation failed: {str(err)}",
+        )
+    except ValueError as err:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=str(err),
+        )
+    except Exception as err:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Reprocessing failed: {type(err).__name__}",
+        )
 
 
 @router.post(
@@ -559,6 +793,26 @@ def grant_document_permission(
             )
             db.add(perm)
 
+        # Audit: DOCUMENT_PERMISSION_GRANTED
+        rec = log_event(
+            db,
+            event_type=DOCUMENT_PERMISSION_GRANTED,
+            event_status=STATUS_SUCCESS,
+            user_id=current_user.id,
+            resource_type=RESOURCE_DOCUMENT,
+            resource_id=doc.id,
+            details={
+                "target_user_id": target_user.id,
+                "can_read": perm.can_read,
+                "granted_by_user_id": current_user.id,
+            },
+        )
+        if rec is None:
+            db.rollback()
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Security audit logging failed; operation aborted.",
+            )
         db.commit()
         db.refresh(perm)
 
@@ -653,6 +907,26 @@ def revoke_document_permission(
 
     try:
         db.delete(perm)
+
+        # Audit: DOCUMENT_PERMISSION_REVOKED
+        rec = log_event(
+            db,
+            event_type=DOCUMENT_PERMISSION_REVOKED,
+            event_status=STATUS_SUCCESS,
+            user_id=current_user.id,
+            resource_type=RESOURCE_DOCUMENT,
+            resource_id=doc.id,
+            details={
+                "target_user_id": user_id,
+                "granted_by_user_id": current_user.id,
+            },
+        )
+        if rec is None:
+            db.rollback()
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Security audit logging failed; operation aborted.",
+            )
         db.commit()
 
         return ActionMessageResponse(
