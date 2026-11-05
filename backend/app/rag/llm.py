@@ -17,12 +17,17 @@ from typing import Optional
 import httpx
 
 from app.rag.embeddings import OllamaConnectionError, OllamaModelNotFoundError
-from app.rag.prompts import COGNISEC_SYSTEM_PROMPT, format_user_prompt
+from app.rag.prompts import (
+    COGNISEC_SYSTEM_PROMPT,
+    STRUCTURED_SYSTEM_PROMPT,
+    format_structured_user_prompt,
+    format_user_prompt,
+)
 
 logger = logging.getLogger(__name__)
 
 DEFAULT_OLLAMA_BASE_URL: str = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
-DEFAULT_OLLAMA_CHAT_MODEL: str = os.getenv("OLLAMA_CHAT_MODEL", "llama3.2:3b")
+DEFAULT_OLLAMA_CHAT_MODEL: str = os.getenv("OLLAMA_CHAT_MODEL", "llama3.2:1b")
 DEFAULT_OLLAMA_TIMEOUT: float = float(os.getenv("OLLAMA_TIMEOUT", "120.0"))
 
 
@@ -84,7 +89,10 @@ class OllamaChatClient:
             raise LLMGenerationError("Context text must not be empty for answer generation.")
 
         chat_endpoint = f"{self.base_url}/api/chat"
-        user_message_content = format_user_prompt(question, context_text)
+        if system_prompt == STRUCTURED_SYSTEM_PROMPT or "JSON" in system_prompt:
+            user_message_content = format_structured_user_prompt(question, context_text)
+        else:
+            user_message_content = format_user_prompt(question, context_text)
 
         payload = {
             "model": self.model,
@@ -93,9 +101,11 @@ class OllamaChatClient:
                 {"role": "user", "content": user_message_content},
             ],
             "stream": False,
+            "keep_alive": "15m",
             "options": {
                 "temperature": temperature,
                 "top_p": 0.9,
+                "num_predict": 300,
             },
         }
 

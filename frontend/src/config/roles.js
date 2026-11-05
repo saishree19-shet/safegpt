@@ -19,7 +19,7 @@ export const ROLES = {
     title: 'Employee',
     tag: 'Operational',
     description: "Access your organisation's knowledge workspace and ask questions within your authorised permissions.",
-    route: '/employee',
+    route: '/app',
     icon: 'User',
     isOperational: true,
     canSelfRegister: true,

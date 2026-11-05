@@ -33,7 +33,7 @@ export default function ProtectedRoute({ children, requiredRole }) {
 
   // Wrong role (e.g. employee trying to access /admin)
   if (requiredRole && user.role !== requiredRole) {
-    const fallback = user.role === 'admin' ? '/admin' : '/employee';
+    const fallback = user.role === 'admin' ? '/admin' : '/app';
     return <Navigate to={fallback} replace />;
   }
 

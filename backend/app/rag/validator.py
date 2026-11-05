@@ -313,12 +313,34 @@ def _validate_claim_against_single_chunk(
     claim_sig_tokens = _significant_tokens(claim_text)
     chunk_sig_tokens = _significant_tokens(chunk_sanitized_text)
 
-    # Only flag negation conflict when there's meaningful overlap of non-negation tokens
+    # Split chunk into candidate sentences to check negation against the specific matching evidence
+    chunk_sentences = [s.strip() for s in re.split(r"(?<=[.!?])\s+", chunk_sanitized_text) if s.strip()]
+    if not chunk_sentences:
+        chunk_sentences = [chunk_sanitized_text]
+
+    has_compatible_sentence = False
+    has_conflicting_sentence = False
+    for sentence in chunk_sentences:
+        sent_sig = _significant_tokens(sentence)
+        sent_shared = claim_sig_tokens & sent_sig
+        sent_overlap = len(sent_shared) / max(len(claim_sig_tokens), 1)
+        if sent_overlap >= _KEYWORD_OVERLAP_THRESHOLD or len(sent_shared) >= 3:
+            sent_negated = _has_negation(sentence.lower())
+            if claim_negated == sent_negated:
+                has_compatible_sentence = True
+            else:
+                has_conflicting_sentence = True
+
     shared_sig = claim_sig_tokens & chunk_sig_tokens
-    negation_conflict = (
-        claim_negated != chunk_negated
-        and len(shared_sig) >= 2  # Must share meaningful context first
-    )
+    if has_compatible_sentence:
+        negation_conflict = False
+    elif has_conflicting_sentence:
+        negation_conflict = True
+    else:
+        negation_conflict = (
+            claim_negated != chunk_negated
+            and len(shared_sig) >= 2  # Must share meaningful context first
+        )
 
     # --- Layer 2: Keyword overlap ---
     if claim_sig_tokens:

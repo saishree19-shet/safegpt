@@ -19,7 +19,7 @@ export default function PublicOnlyRoute({ children }) {
   }
 
   if (user) {
-    const destination = user.role === 'admin' ? '/admin' : '/employee';
+    const destination = user.role === 'admin' ? '/admin' : '/app';
     return <Navigate to={destination} replace />;
   }
 

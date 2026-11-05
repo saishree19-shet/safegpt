@@ -7,17 +7,26 @@ import PublicOnlyRoute from './components/PublicOnlyRoute';
 import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
-import EmployeeDashboard from './pages/EmployeeDashboard';
+
+// Employee Dashboard
+import EmployeeLayout from './pages/employee/EmployeeLayout';
+import OverviewTab from './pages/employee/OverviewTab';
+import DocumentsTab from './pages/employee/DocumentsTab';
+import AskTab from './pages/employee/AskTab';
+import SecurityTab from './pages/employee/SecurityTab';
+import SettingsTab from './pages/employee/SettingsTab';
+
+// Admin Dashboard placeholder (Step 7.4)
 import AdminDashboard from './pages/AdminDashboard';
 
 export default function App() {
   return (
     <AuthProvider>
       <Routes>
-        {/* Public */}
+        {/* Public Landing */}
         <Route path="/" element={<LandingPage />} />
 
-        {/* Auth pages — redirect away if already signed in */}
+        {/* Public-only Auth Pages */}
         <Route
           path="/login"
           element={
@@ -35,15 +44,25 @@ export default function App() {
           }
         />
 
-        {/* Protected: employee role */}
+        {/* Protected Employee Workspace */}
         <Route
-          path="/employee"
+          path="/app"
           element={
             <ProtectedRoute requiredRole="employee">
-              <EmployeeDashboard />
+              <EmployeeLayout />
             </ProtectedRoute>
           }
-        />
+        >
+          <Route index element={<OverviewTab />} />
+          <Route path="documents" element={<DocumentsTab />} />
+          <Route path="ask" element={<AskTab />} />
+          <Route path="security" element={<SecurityTab />} />
+          <Route path="settings" element={<SettingsTab />} />
+        </Route>
+
+        {/* Backward-compatibility: redirect /employee to /app */}
+        <Route path="/employee" element={<Navigate to="/app" replace />} />
+        <Route path="/employee/*" element={<Navigate to="/app" replace />} />
 
         {/* Protected: admin role */}
         <Route
