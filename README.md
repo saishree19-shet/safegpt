@@ -135,25 +135,162 @@ Access is enforced by the backend. A user's role alone does not automatically gr
 
 ---
 
-## 📅 Implementation Status: Day 1 Complete
+## 📅 Implementation Status
 
-### ✅ Implemented Today (Day 1)
-- [x] Standardized project folder hierarchy (`backend/`, `frontend/`, `database/`, `research/`).
-- [x] Python virtual environment (`.venv`) initialized inside `backend/`.
-- [x] Core dependencies (`FastAPI`, `Uvicorn`) installed and pinned in [`backend/requirements.txt`](backend/requirements.txt).
-- [x] Minimal FastAPI application in [`backend/app/main.py`](backend/app/main.py).
-- [x] Operational health check endpoint: `GET /health` -> `{"status": "ok"}`.
-- [x] Friendly root greeting endpoint: `GET /`.
-- [x] Auto-generated interactive API documentation (`/docs` via Swagger UI, `/redoc` via ReDoc).
-- [x] Comprehensive `.gitignore` protecting company files, secrets, virtual environments, and build artifacts.
+### ✅ Implemented — Authentication & Authorization
+- [x] Secure user signup (`POST /auth/signup`) with strong password validation and email normalization.
+- [x] Login with Argon2 password hashing, JWT access tokens, and sliding-window rate limiting (`POST /auth/login`).
+- [x] Authenticated user profile retrieval (`GET /auth/me`).
+- [x] Role-based access: `employee`, `project_expert`, `admin`. Roles are server-enforced; admin role alone does not grant document read access.
+- [x] Administrator CLI provisioning script (`backend/scripts/create_admin.py`).
+- [x] SQL migration: [`database/migrations/001_add_password_hash_to_users.sql`](database/migrations/001_add_password_hash_to_users.sql).
+
+### ✅ Implemented — Secure Document Upload
+- [x] `POST /documents/upload` — accepts only `.pdf` and `.docx` files.
+- [x] Files streamed to `backend/private_uploads/` using UUID-randomized filenames (never served statically).
+- [x] 10 MB upload size limit enforced while streaming.
+- [x] Rejects empty files, invalid extensions, corrupt PDFs/DOCX, password-protected PDFs, and documents with no extractable text.
+- [x] Atomic transaction: file deleted and DB rolled back on any failure.
+
+### ✅ Implemented — Document Access Control
+- [x] `GET /documents` — lists only documents the authenticated user is authorized to access.
+- [x] `GET /documents/{id}` — returns safe metadata (no text, no storage path) with IDOR protection.
+- [x] `POST /documents/{id}/permissions` — grants read access; restricted to document owner or admin.
+- [x] `DELETE /documents/{id}/permissions/{user_id}` — revokes access immediately.
+- [x] Prevents self-grant, owner redundant grant, and unauthorized permission management.
+
+### ✅ Implemented — Persistent Extracted Text Storage
+- [x] Extracted text persisted atomically with document record in a single DB transaction.
+- [x] `GET /documents/{id}/text` — retrieves persisted text pages with zero-trust authorization.
+- [x] SQL migration: [`database/migrations/002_create_document_text_pages.sql`](database/migrations/002_create_document_text_pages.sql).
+- [x] Full test coverage: PDF persistence, DOCX persistence, authorized access, revocation, zero-trust admin enforcement, DB failure rollback.
 
 ### ⏳ Planned for Upcoming Phases
-- [ ] **Phase 2:** PostgreSQL & `pgvector` database setup & migrations.
-- [ ] **Phase 3:** Document ingestion pipeline (parsing, chunking, and embedding generation).
 - [ ] **Phase 4:** Ollama integration & local LLM orchestration (RAG pipeline).
-- [ ] **Phase 5:** Role-Based Access Control (RBAC) & user authentication.
-- [ ] **Phase 6:** Privacy Guardrails (Presidio PII redaction, prompt injection defense).
-- [ ] **Phase 7:** React + Vite frontend web interface.
+- [ ] **Phase 5:** Privacy Guardrails (Presidio PII redaction, prompt injection defense).
+- [ ] **Phase 6:** React + Vite frontend web interface.
+- [ ] **Phase 7:** Access-request workflow and audit logging.
+
+---
+
+## 🗄️ Database Schema
+
+### `users`
+Stores authenticated user accounts. Passwords are stored as Argon2 hashes; plaintext passwords are never persisted.
+
+| Column | Type | Constraints | Notes |
+|---|---|---|---|
+| `id` | `INTEGER` | `PRIMARY KEY` | Auto-increment |
+| `email` | `VARCHAR(255)` | `UNIQUE NOT NULL` | Normalized to lowercase on write |
+| `full_name` | `VARCHAR(150)` | `NOT NULL` | |
+| `password_hash` | `VARCHAR(255)` | `NOT NULL` | Argon2 hash only |
+| `role` | `VARCHAR(30)` | `NOT NULL DEFAULT 'employee'` | `employee`, `project_expert`, `admin` |
+| `is_active` | `BOOLEAN` | `NOT NULL DEFAULT TRUE` | Inactive accounts cannot log in |
+| `created_at` | `TIMESTAMPTZ` | `NOT NULL` | UTC |
+
+### `documents`
+Stores metadata for uploaded company documents. File contents are never exposed through this table.
+
+| Column | Type | Constraints | Notes |
+|---|---|---|---|
+| `id` | `INTEGER` | `PRIMARY KEY` | |
+| `title` | `VARCHAR(255)` | `NOT NULL` | Original filename |
+| `filename` | `VARCHAR(255)` | `NOT NULL` | Original filename |
+| `storage_path` | `VARCHAR(500)` | `NOT NULL` | Private filesystem path; never served publicly |
+| `owner_id` | `INTEGER` | `FK → users.id NOT NULL` | |
+| `status` | `VARCHAR(30)` | `NOT NULL DEFAULT 'uploaded'` | |
+| `created_at` | `TIMESTAMPTZ` | `NOT NULL` | UTC |
+
+### `document_permissions`
+Explicit per-user read grants. An admin role alone does not grant read access without a row in this table.
+
+| Column | Type | Constraints | Notes |
+|---|---|---|---|
+| `id` | `INTEGER` | `PRIMARY KEY` | |
+| `document_id` | `INTEGER` | `FK → documents.id ON DELETE CASCADE` | |
+| `user_id` | `INTEGER` | `FK → users.id ON DELETE CASCADE` | |
+| `can_read` | `BOOLEAN` | `NOT NULL DEFAULT TRUE` | |
+| `granted_by` | `INTEGER` | `FK → users.id NULLABLE` | |
+| `created_at` | `TIMESTAMPTZ` | `NOT NULL` | UTC |
+
+**Unique constraint:** `(document_id, user_id)` — one permission row per user per document.
+
+### `document_text_pages`
+Persists extracted text from uploaded documents at the page level. Cascades on document deletion.
+
+| Column | Type | Constraints | Notes |
+|---|---|---|---|
+| `id` | `INTEGER` | `PRIMARY KEY` | |
+| `document_id` | `INTEGER` | `FK → documents.id ON DELETE CASCADE NOT NULL` | Indexed |
+| `page_number` | `INTEGER` | `NULLABLE` | `1`-indexed for PDFs; `NULL` for DOCX files |
+| `text_content` | `TEXT` | `NOT NULL` | Extracted text for this page/section |
+| `char_count` | `INTEGER` | `NOT NULL` | Character count of `text_content` |
+| `created_at` | `TIMESTAMPTZ` | `NOT NULL DEFAULT NOW()` | UTC |
+
+**Indexes:** `idx_document_text_pages_document_id`, `idx_document_text_pages_doc_page (document_id, page_number)`.
+
+> **Known Limitation — DOCX Page Boundaries:** The `python-docx` library extracts text at the paragraph level and does not provide reliable page number information. DOCX documents are stored as a single row with `page_number = NULL`. PDF documents produced by PyMuPDF preserve page-level boundaries with 1-indexed page numbers.
+
+---
+
+## 🔄 Database Migrations
+
+Migrations are plain SQL scripts in [`database/migrations/`](database/migrations/). They are designed to be **idempotent** (safe to run multiple times) and **non-destructive** (they never drop or recreate existing tables).
+
+### Applying Migrations
+
+From the `backend/` directory with the `.venv` activated:
+
+```powershell
+# Apply migration 001 (adds password_hash to users)
+Get-Content ..\ database\migrations\001_add_password_hash_to_users.sql | psql -U <username> -d safe_company_chatbot
+
+# Apply migration 002 (creates document_text_pages table)
+Get-Content ..\database\migrations\002_create_document_text_pages.sql | psql -U <username> -d safe_company_chatbot
+```
+
+Or using the Python helper (which uses the configured `DATABASE_URL` from `.env`):
+
+```powershell
+.venv\Scripts\python.exe -c "
+from app.database import engine
+from sqlalchemy import text
+from pathlib import Path
+sql = Path('../database/migrations/002_create_document_text_pages.sql').read_text()
+with engine.begin() as conn: conn.execute(text(sql))
+print('Migration applied.')
+"
+```
+
+---
+
+## 📡 API Reference
+
+### Authentication
+| Method | Endpoint | Auth Required | Description |
+|---|---|---|---|
+| `POST` | `/auth/signup` | No | Register a new employee account |
+| `POST` | `/auth/login` | No | Obtain a JWT access token |
+| `GET` | `/auth/me` | Bearer JWT | Return the authenticated user's profile |
+
+### Documents
+| Method | Endpoint | Auth Required | Description |
+|---|---|---|---|
+| `POST` | `/documents/upload` | Bearer JWT | Upload and process a PDF or DOCX document |
+| `GET` | `/documents` | Bearer JWT | List authorized documents (owned or explicitly granted) |
+| `GET` | `/documents/{id}` | Bearer JWT | Retrieve safe document metadata (no text exposed) |
+| `GET` | `/documents/{id}/text` | Bearer JWT | Retrieve persisted extracted text (zero-trust; see below) |
+| `POST` | `/documents/{id}/permissions` | Bearer JWT | Grant read access (owner or admin only) |
+| `DELETE` | `/documents/{id}/permissions/{user_id}` | Bearer JWT | Revoke access (owner or admin only; immediate effect) |
+
+### Text Retrieval Authorization Policy (`GET /documents/{id}/text`)
+- ✅ **Document owner** — always authorized.
+- ✅ **Employee with `can_read=True` explicit grant** — authorized.
+- ❌ **Administrator without explicit grant** — `403 Forbidden`. Admin role alone does not grant text access.
+- ❌ **Unauthorized employee** — `403 Forbidden`.
+- ❌ **Revoked permission** — immediately `403 Forbidden` (no caching).
+- ❌ **Unauthenticated** — `401 Unauthorized`.
+- ❌ **Nonexistent document** — `404 Not Found`.
 
 ---
 
@@ -231,11 +368,16 @@ uvicorn app.main:app --reload
 
 ## 🔒 Security and Privacy Considerations
 
-The project follows a strict local-first design:
-- **No External Cloud AI:** No employee prompts or document contents are ever transmitted to third-party cloud APIs.
-- **Git Protection:** `.gitignore` excludes company documents (`*.pdf`, `*.docx`), secrets (`.env`), vector caches, and virtual environments from version control.
-- **Permission Enforcement:** Permissions will be checked prior to context retrieval in future phases.
-- **Sensitive Data Redaction:** PII detection and masking will be applied prior to model ingestion.
+The project follows a strict local-first, zero-trust design:
+
+- **No External Cloud AI:** No employee prompts or document contents are transmitted to third-party cloud APIs.
+- **Git Protection:** `.gitignore` excludes company documents (`*.pdf`, `*.docx`), secrets (`.env`), private upload directories, vector caches, and virtual environments from version control.
+- **Zero-Trust Authorization:** An administrator role alone does not grant read access to confidential documents or their extracted text. Every read request requires either document ownership or an explicit per-document `can_read=True` grant.
+- **IDOR Prevention:** All document and permission operations perform server-side identity verification. Client-supplied user IDs are never trusted; the authenticated user is always derived from the signed JWT.
+- **Atomic Transactions:** Document upload, text extraction, and text persistence are wrapped in a single DB transaction. Any failure rolls back the database and removes the uploaded file from disk.
+- **Immediate Revocation:** Permission revocation takes effect on the next request — there is no caching of authorization decisions.
+- **No Sensitive Field Exposure:** `storage_path`, `password_hash`, and `text_content` are never returned by list or metadata endpoints.
+- **Sensitive Data Redaction:** PII detection and masking will be applied prior to LLM model ingestion in a future phase.
 
 ---
 
