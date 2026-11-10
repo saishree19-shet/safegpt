@@ -32,18 +32,18 @@ export default function Navbar() {
     <header
       className={`sticky top-0 z-50 transition-all duration-200 ${
         isScrolled
-          ? 'bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-sm'
-          : 'bg-white'
+          ? 'bg-white/90 backdrop-blur-md border-b border-slate-200/80 shadow-xs'
+          : 'bg-white/70 backdrop-blur-sm'
       }`}
     >
       <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 h-20 flex items-center justify-between">
         {/* Brand */}
         <Link
           to="/"
-          className="flex items-center gap-2.5 text-darkGreen font-semibold text-xl tracking-tight hover:opacity-90 transition-opacity"
+          className="flex items-center gap-3 text-darkGreen font-semibold text-xl tracking-tight hover:opacity-90 transition-opacity"
         >
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center text-darkGreen">
-            <Shield className="w-6 h-6 stroke-[2.2]" />
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-600 to-darkGreen text-white flex items-center justify-center shadow-xs">
+            <Shield className="w-5 h-5 stroke-[2.4]" />
           </div>
           <span className="text-2xl font-bold tracking-tight text-darkGreen">
             CogniSec
@@ -51,44 +51,44 @@ export default function Navbar() {
         </Link>
 
         {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-charcoal/80">
+        <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-charcoal-700">
           <button
             onClick={() => scrollToSection('product')}
-            className="hover:text-darkGreen transition-colors"
+            className="hover:text-darkGreen transition-colors cursor-pointer"
           >
             Product
           </button>
           <button
             onClick={() => scrollToSection('features')}
-            className="hover:text-darkGreen transition-colors"
+            className="hover:text-darkGreen transition-colors cursor-pointer"
           >
             Features
           </button>
           <button
             onClick={() => scrollToSection('security')}
-            className="hover:text-darkGreen transition-colors"
+            className="hover:text-darkGreen transition-colors cursor-pointer"
           >
             Security
           </button>
           <button
             onClick={() => scrollToSection('how-it-works')}
-            className="hover:text-darkGreen transition-colors"
+            className="hover:text-darkGreen transition-colors cursor-pointer"
           >
             How It Works
           </button>
         </nav>
 
         {/* Desktop CTA / Auth */}
-        <div className="hidden md:flex items-center gap-5">
+        <div className="hidden md:flex items-center gap-4">
           <Link
             to="/login"
-            className="text-sm font-medium text-charcoal/80 hover:text-darkGreen transition-colors px-2 py-1"
+            className="text-sm font-semibold text-charcoal-700 hover:text-darkGreen transition-colors px-3.5 py-2 rounded-lg hover:bg-slate-50"
           >
             Log in
           </Link>
           <Link
             to="/signup"
-            className="bg-darkGreen text-white text-sm font-medium px-5 py-2.5 rounded-lg hover:bg-darkGreen/90 transition-all shadow-sm active:scale-[0.99]"
+            className="bg-darkGreen text-white text-sm font-semibold px-5 py-2.5 rounded-xl hover:bg-darkGreen-800 transition-all shadow-xs hover:shadow hover:-translate-y-0.5 active:translate-y-0"
           >
             Get Started
           </Link>
@@ -97,7 +97,7 @@ export default function Navbar() {
         {/* Mobile menu trigger */}
         <button
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="md:hidden p-2 text-charcoal hover:text-darkGreen"
+          className="md:hidden p-2 text-charcoal-700 hover:text-darkGreen rounded-lg hover:bg-slate-100 transition-colors"
           aria-label="Toggle navigation menu"
         >
           {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -106,29 +106,29 @@ export default function Navbar() {
 
       {/* Mobile Menu Dropdown */}
       {mobileMenuOpen && (
-        <div className="md:hidden bg-white border-b border-gray-100 px-6 py-6 space-y-4 shadow-lg animate-in slide-in-from-top duration-200">
-          <div className="flex flex-col space-y-3 font-medium text-charcoal">
+        <div className="md:hidden bg-white border-b border-slate-200 px-6 py-6 space-y-4 shadow-lg animate-in slide-in-from-top duration-200">
+          <div className="flex flex-col space-y-3 font-medium text-charcoal-700">
             <button
               onClick={() => scrollToSection('product')}
-              className="text-left py-2 hover:text-darkGreen border-b border-gray-50"
+              className="text-left py-2 hover:text-darkGreen border-b border-slate-100 cursor-pointer"
             >
               Product
             </button>
             <button
               onClick={() => scrollToSection('features')}
-              className="text-left py-2 hover:text-darkGreen border-b border-gray-50"
+              className="text-left py-2 hover:text-darkGreen border-b border-slate-100 cursor-pointer"
             >
               Features
             </button>
             <button
               onClick={() => scrollToSection('security')}
-              className="text-left py-2 hover:text-darkGreen border-b border-gray-50"
+              className="text-left py-2 hover:text-darkGreen border-b border-slate-100 cursor-pointer"
             >
               Security
             </button>
             <button
               onClick={() => scrollToSection('how-it-works')}
-              className="text-left py-2 hover:text-darkGreen border-b border-gray-50"
+              className="text-left py-2 hover:text-darkGreen border-b border-slate-100 cursor-pointer"
             >
               How It Works
             </button>
@@ -136,14 +136,14 @@ export default function Navbar() {
           <div className="pt-4 flex flex-col gap-3">
             <Link
               to="/login"
-              className="text-center py-2.5 border border-gray-200 rounded-lg text-sm font-medium text-charcoal"
+              className="text-center py-2.5 border border-slate-200 rounded-xl text-sm font-semibold text-charcoal-700 hover:bg-slate-50 transition-colors"
               onClick={() => setMobileMenuOpen(false)}
             >
               Log in
             </Link>
             <Link
               to="/signup"
-              className="text-center py-2.5 bg-darkGreen text-white rounded-lg text-sm font-medium hover:bg-darkGreen/90"
+              className="text-center py-2.5 bg-darkGreen text-white rounded-xl text-sm font-semibold hover:bg-darkGreen-800 transition-colors shadow-xs"
               onClick={() => setMobileMenuOpen(false)}
             >
               Get Started

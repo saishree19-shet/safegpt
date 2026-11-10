@@ -68,30 +68,30 @@ export default function OverviewTab() {
   return (
     <div className="space-y-8 animate-in fade-in duration-200">
       {/* Welcome Banner */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-gray-100">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-200/80">
         <div>
-          <span className="text-[11px] font-mono uppercase tracking-widest text-sage font-medium">
+          <span className="text-[11px] font-mono uppercase tracking-widest text-emerald-800 font-bold">
             CogniSec Private Workspace
           </span>
-          <h1 className="text-2xl sm:text-3xl font-bold text-darkGreen tracking-tight mt-1">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-darkGreen tracking-tight mt-1">
             {greeting}, {firstName}
           </h1>
-          <p className="text-sm text-charcoal/70 mt-1">
-            Your private workspace for finding and using company knowledge.
+          <p className="text-sm text-charcoal-500 font-medium mt-1">
+            Your private workspace for querying company knowledge with offline AI.
           </p>
         </div>
 
         <div className="flex items-center gap-3">
           <button
             onClick={() => setIsUploadOpen(true)}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-darkGreen text-white text-xs font-medium hover:bg-darkGreen/90 transition-all shadow-xs cursor-pointer"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-darkGreen text-white text-xs font-semibold hover:bg-darkGreen-800 transition-all shadow-xs cursor-pointer"
           >
             <FileUp className="w-3.5 h-3.5" />
             <span>Upload Document</span>
           </button>
           <Link
             to="/app/ask"
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-white border border-gray-200 text-darkGreen text-xs font-medium hover:bg-mint-50 transition-all shadow-xs"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-darkGreen text-xs font-semibold hover:bg-emerald-50/50 hover:border-emerald-200 transition-all shadow-2xs"
           >
             <MessageSquare className="w-3.5 h-3.5" />
             <span>Ask CogniSec</span>
@@ -102,91 +102,91 @@ export default function OverviewTab() {
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Card 1: My Documents */}
-        <div className="bg-white border border-gray-200/80 rounded-xl p-5 shadow-xs flex flex-col justify-between">
+        <div className="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-2xs hover:border-emerald-300 transition-all hover:shadow-card flex flex-col justify-between">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-mono uppercase tracking-wider text-charcoal/60">
+            <span className="text-xs font-mono uppercase tracking-wider text-charcoal-400 font-bold">
               My Documents
             </span>
-            <div className="w-7 h-7 rounded-md bg-mint-100 text-darkGreen flex items-center justify-center">
-              <FileText className="w-3.5 h-3.5 stroke-[2.2]" />
+            <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center">
+              <FileText className="w-4 h-4 stroke-[2.2]" />
             </div>
           </div>
           <div className="mt-4">
-            <div className="text-2xl font-bold text-darkGreen">
+            <div className="text-2xl font-black text-darkGreen">
               {loading ? (
-                <span className="text-charcoal/30 text-lg">…</span>
+                <span className="text-charcoal-300 text-lg">…</span>
               ) : (
                 myDocsCount
               )}
             </div>
-            <p className="text-xs text-charcoal/60 mt-1">Uploaded by your account</p>
+            <p className="text-xs text-charcoal-500 font-medium mt-1">Uploaded by your account</p>
           </div>
         </div>
 
         {/* Card 2: Available Knowledge */}
-        <div className="bg-white border border-gray-200/80 rounded-xl p-5 shadow-xs flex flex-col justify-between">
+        <div className="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-2xs hover:border-emerald-300 transition-all hover:shadow-card flex flex-col justify-between">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-mono uppercase tracking-wider text-charcoal/60">
-              Available Knowledge
+            <span className="text-xs font-mono uppercase tracking-wider text-charcoal-400 font-bold">
+              Authorized Scope
             </span>
-            <div className="w-7 h-7 rounded-md bg-mint-100 text-darkGreen flex items-center justify-center">
-              <Search className="w-3.5 h-3.5 stroke-[2.2]" />
+            <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center">
+              <Search className="w-4 h-4 stroke-[2.2]" />
             </div>
           </div>
           <div className="mt-4">
-            <div className="text-2xl font-bold text-darkGreen">
+            <div className="text-2xl font-black text-darkGreen">
               {loading ? (
-                <span className="text-charcoal/30 text-lg">…</span>
+                <span className="text-charcoal-300 text-lg">…</span>
               ) : (
                 totalKnowledgeCount
               )}
             </div>
-            <p className="text-xs text-charcoal/60 mt-1">Authorized files in scope</p>
+            <p className="text-xs text-charcoal-500 font-medium mt-1">Authorized files in scope</p>
           </div>
         </div>
 
         {/* Card 3: Recent Searches / Inquiries */}
-        <div className="bg-white border border-gray-200/80 rounded-xl p-5 shadow-xs flex flex-col justify-between">
+        <div className="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-2xs hover:border-emerald-300 transition-all hover:shadow-card flex flex-col justify-between">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-mono uppercase tracking-wider text-charcoal/60">
+            <span className="text-xs font-mono uppercase tracking-wider text-charcoal-400 font-bold">
               Knowledge Assistant
             </span>
-            <div className="w-7 h-7 rounded-md bg-mint-100 text-darkGreen flex items-center justify-center">
-              <MessageSquare className="w-3.5 h-3.5 stroke-[2.2]" />
+            <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center">
+              <MessageSquare className="w-4 h-4 stroke-[2.2]" />
             </div>
           </div>
           <div className="mt-4">
-            <div className="text-xs font-medium text-darkGreen flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-softGreen" />
+            <div className="text-xs font-bold text-darkGreen flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
               <span>RAG Engine Online</span>
             </div>
-            <p className="text-xs text-charcoal/60 mt-1">Local Ollama verified</p>
+            <p className="text-xs text-charcoal-500 font-medium mt-1">Local Ollama verified</p>
           </div>
         </div>
 
         {/* Card 4: Security Status */}
-        <div className="bg-white border border-gray-200/80 rounded-xl p-5 shadow-xs flex flex-col justify-between">
+        <div className="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-2xs hover:border-emerald-300 transition-all hover:shadow-card flex flex-col justify-between">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-mono uppercase tracking-wider text-charcoal/60">
+            <span className="text-xs font-mono uppercase tracking-wider text-charcoal-400 font-bold">
               Security Boundary
             </span>
-            <div className="w-7 h-7 rounded-md bg-mint-100 text-darkGreen flex items-center justify-center">
-              <ShieldCheck className="w-3.5 h-3.5 stroke-[2.2]" />
+            <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center">
+              <ShieldCheck className="w-4 h-4 stroke-[2.2]" />
             </div>
           </div>
           <div className="mt-4">
-            <div className="text-xs font-medium text-darkGreen flex items-center gap-1.5">
-              <Lock className="w-3.5 h-3.5 text-sage" />
+            <div className="text-xs font-bold text-darkGreen flex items-center gap-1.5">
+              <Lock className="w-3.5 h-3.5 text-emerald-600" />
               <span>Zero Exposure</span>
             </div>
-            <p className="text-xs text-charcoal/60 mt-1">SQL-level ACL & Sanitization</p>
+            <p className="text-xs text-charcoal-500 font-medium mt-1">SQL-level ACL & Sanitization</p>
           </div>
         </div>
       </div>
 
       {/* Quick Actions */}
-      <div className="bg-mint-50/50 border border-mint-border rounded-xl p-6">
-        <h2 className="text-xs font-mono uppercase tracking-wider text-darkGreen font-semibold mb-4">
+      <div className="bg-slate-50/80 border border-slate-200/90 rounded-2xl p-6">
+        <h2 className="text-xs font-mono uppercase tracking-wider text-darkGreen font-bold mb-4">
           Quick Actions
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

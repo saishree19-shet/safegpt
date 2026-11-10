@@ -104,12 +104,12 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#FBFDFB] flex flex-col justify-between p-6 sm:p-10 font-sans">
+    <div className="min-h-screen bg-slate-50/60 flex flex-col justify-between p-6 sm:p-10 font-sans">
       {/* Top nav */}
       <div>
         <Link
           to="/"
-          className="inline-flex items-center gap-2 text-sm text-charcoal/70 hover:text-darkGreen transition-colors"
+          className="inline-flex items-center gap-2 text-sm text-charcoal-600 hover:text-darkGreen transition-colors font-medium"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>Back to CogniSec</span>
@@ -117,23 +117,23 @@ export default function LoginPage() {
       </div>
 
       {/* Main card */}
-      <div className="max-w-xl w-full mx-auto bg-white border border-gray-200/80 rounded-2xl p-7 sm:p-10 shadow-sm my-8">
+      <div className="max-w-xl w-full mx-auto bg-white border border-slate-200/90 rounded-2xl p-7 sm:p-10 shadow-card my-8">
         {/* Brand header */}
         <div className="flex items-center gap-2.5 text-darkGreen mb-6">
-          <div className="w-8 h-8 rounded-lg bg-mint-100 border border-mint-border flex items-center justify-center">
-            <Shield className="w-5 h-5 text-darkGreen stroke-[2.2]" />
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-600 to-darkGreen text-white flex items-center justify-center shadow-xs">
+            <Shield className="w-5 h-5 stroke-[2.2]" />
           </div>
           <span className="text-xl font-bold tracking-tight text-darkGreen">CogniSec</span>
         </div>
 
-        <h1 className="text-2xl font-bold text-darkGreen tracking-tight">Enterprise Sign In</h1>
-        <p className="text-sm text-charcoal/70 mt-1 mb-6">
-          Select your portal role and enter your enterprise credentials.
+        <h1 className="text-2xl font-extrabold text-darkGreen tracking-tight">Enterprise Sign In</h1>
+        <p className="text-sm text-charcoal-500 mt-1 mb-6 font-medium">
+          Select your portal role and enter your verified enterprise credentials.
         </p>
 
         {/* Role Selector */}
         <div className="mb-7">
-          <label className="block text-xs font-mono uppercase tracking-wider text-charcoal/70 font-medium mb-2.5">
+          <label className="block text-xs font-mono uppercase tracking-wider text-charcoal-600 font-bold mb-2.5">
             Select Portal Role
           </label>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
@@ -146,8 +146,8 @@ export default function LoginPage() {
               }}
               className={`relative text-left p-4 rounded-xl border transition-all cursor-pointer ${
                 selectedRole === ROLES.EMPLOYEE.id
-                  ? 'border-darkGreen bg-mint-100/50 shadow-xs ring-1 ring-darkGreen'
-                  : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50/50'
+                  ? 'border-emerald-600 bg-emerald-50/60 shadow-xs ring-1 ring-emerald-600'
+                  : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/50'
               }`}
             >
               <div className="flex items-center justify-between mb-2">
@@ -155,7 +155,7 @@ export default function LoginPage() {
                   className={`w-8 h-8 rounded-lg flex items-center justify-center ${
                     selectedRole === ROLES.EMPLOYEE.id
                       ? 'bg-darkGreen text-white'
-                      : 'bg-gray-100 text-charcoal/60'
+                      : 'bg-slate-100 text-charcoal-500'
                   }`}
                 >
                   <User className="w-4 h-4 stroke-[2.2]" />
@@ -163,16 +163,16 @@ export default function LoginPage() {
                 <span
                   className={`text-[10px] font-mono uppercase px-2 py-0.5 rounded-full ${
                     selectedRole === ROLES.EMPLOYEE.id
-                      ? 'bg-darkGreen/10 text-darkGreen font-semibold'
-                      : 'bg-gray-100 text-charcoal/50'
+                      ? 'bg-emerald-100 text-emerald-800 font-bold'
+                      : 'bg-slate-100 text-charcoal-500 font-medium'
                   }`}
                 >
                   Workspace
                 </span>
               </div>
-              <p className="text-sm font-semibold text-darkGreen mb-0.5">Employee</p>
-              <p className="text-xs text-charcoal/60 leading-relaxed">
-                Access your organisation's knowledge workspace.
+              <p className="text-sm font-bold text-darkGreen mb-0.5">Employee</p>
+              <p className="text-xs text-charcoal-500 leading-relaxed font-normal">
+                Access your organization's knowledge workspace.
               </p>
             </button>
 
@@ -185,8 +185,8 @@ export default function LoginPage() {
               }}
               className={`relative text-left p-4 rounded-xl border transition-all cursor-pointer ${
                 selectedRole === ROLES.ADMIN.id
-                  ? 'border-darkGreen bg-mint-100/50 shadow-xs ring-1 ring-darkGreen'
-                  : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50/50'
+                  ? 'border-emerald-600 bg-emerald-50/60 shadow-xs ring-1 ring-emerald-600'
+                  : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/50'
               }`}
             >
               <div className="flex items-center justify-between mb-2">
@@ -194,7 +194,7 @@ export default function LoginPage() {
                   className={`w-8 h-8 rounded-lg flex items-center justify-center ${
                     selectedRole === ROLES.ADMIN.id
                       ? 'bg-darkGreen text-white'
-                      : 'bg-gray-100 text-charcoal/60'
+                      : 'bg-slate-100 text-charcoal-500'
                   }`}
                 >
                   <ShieldCheck className="w-4 h-4 stroke-[2.2]" />
@@ -202,16 +202,16 @@ export default function LoginPage() {
                 <span
                   className={`text-[10px] font-mono uppercase px-2 py-0.5 rounded-full ${
                     selectedRole === ROLES.ADMIN.id
-                      ? 'bg-darkGreen/10 text-darkGreen font-semibold'
-                      : 'bg-gray-100 text-charcoal/50'
+                      ? 'bg-emerald-100 text-emerald-800 font-bold'
+                      : 'bg-slate-100 text-charcoal-500 font-medium'
                   }`}
                 >
                   Security
                 </span>
               </div>
-              <p className="text-sm font-semibold text-darkGreen mb-0.5">Administrator</p>
-              <p className="text-xs text-charcoal/60 leading-relaxed">
-                Manage users, documents, permissions and security activities.
+              <p className="text-sm font-bold text-darkGreen mb-0.5">Administrator</p>
+              <p className="text-xs text-charcoal-500 leading-relaxed font-normal">
+                Manage users, documents, permissions and security logs.
               </p>
             </button>
           </div>
@@ -221,9 +221,9 @@ export default function LoginPage() {
         {error && (
           <div
             role="alert"
-            className="mb-5 px-4 py-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-700 flex items-start gap-2.5"
+            className="mb-5 px-4 py-3 rounded-xl bg-rose-50 border border-rose-200 text-sm text-rose-800 flex items-start gap-2.5 font-medium"
           >
-            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-red-600" />
+            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-600" />
             <span className="leading-relaxed">{error}</span>
           </div>
         )}
@@ -233,7 +233,7 @@ export default function LoginPage() {
           <div>
             <label
               htmlFor="email"
-              className="block text-xs font-mono uppercase tracking-wider text-charcoal/70 font-medium mb-1.5"
+              className="block text-xs font-mono uppercase tracking-wider text-charcoal-700 font-bold mb-1.5"
             >
               Work Email
             </label>
@@ -250,14 +250,14 @@ export default function LoginPage() {
                 if (fieldErrors.email) setFieldErrors((p) => ({ ...p, email: '' }));
               }}
               disabled={loading}
-              className={`w-full px-3.5 py-2.5 rounded-lg border text-sm focus:outline-none focus:ring-1 transition-all disabled:opacity-60 ${
+              className={`w-full px-3.5 py-2.5 rounded-xl border text-sm font-medium bg-slate-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all disabled:opacity-60 text-charcoal-900 ${
                 fieldErrors.email
-                  ? 'border-red-400 focus:border-red-400 focus:ring-red-300'
-                  : 'border-gray-200 focus:border-darkGreen focus:ring-darkGreen'
+                  ? 'border-rose-400 focus:border-rose-500'
+                  : 'border-slate-200 focus:border-emerald-600'
               }`}
             />
             {fieldErrors.email && (
-              <p className="mt-1 text-xs text-red-600">{fieldErrors.email}</p>
+              <p className="mt-1 text-xs text-rose-600 font-medium">{fieldErrors.email}</p>
             )}
           </div>
 
@@ -266,7 +266,7 @@ export default function LoginPage() {
             <div className="flex items-center justify-between mb-1.5">
               <label
                 htmlFor="password"
-                className="block text-xs font-mono uppercase tracking-wider text-charcoal/70 font-medium"
+                className="block text-xs font-mono uppercase tracking-wider text-charcoal-700 font-bold"
               >
                 Password
               </label>
@@ -283,23 +283,23 @@ export default function LoginPage() {
                   if (fieldErrors.password) setFieldErrors((p) => ({ ...p, password: '' }));
                 }}
                 disabled={loading}
-                className={`w-full px-3.5 py-2.5 pr-11 rounded-lg border text-sm focus:outline-none focus:ring-1 transition-all disabled:opacity-60 ${
+                className={`w-full px-3.5 py-2.5 pr-11 rounded-xl border text-sm font-medium bg-slate-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all disabled:opacity-60 text-charcoal-900 ${
                   fieldErrors.password
-                    ? 'border-red-400 focus:border-red-400 focus:ring-red-300'
-                    : 'border-gray-200 focus:border-darkGreen focus:ring-darkGreen'
+                    ? 'border-rose-400 focus:border-rose-500'
+                    : 'border-slate-200 focus:border-emerald-600'
                 }`}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword((v) => !v)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-charcoal/40 hover:text-charcoal/70 transition-colors cursor-pointer"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-charcoal-400 hover:text-charcoal-700 transition-colors cursor-pointer p-1"
                 aria-label={showPassword ? 'Hide password' : 'Show password'}
               >
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
             {fieldErrors.password && (
-              <p className="mt-1 text-xs text-red-600">{fieldErrors.password}</p>
+              <p className="mt-1 text-xs text-rose-600 font-medium">{fieldErrors.password}</p>
             )}
           </div>
 
@@ -307,7 +307,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-darkGreen text-white rounded-lg py-3 text-sm font-medium hover:bg-darkGreen/90 transition-all shadow-xs mt-2 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
+            className="w-full bg-darkGreen text-white rounded-xl py-3.5 text-sm font-semibold hover:bg-darkGreen-800 transition-all shadow-sm hover:shadow-md mt-3 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer active:translate-y-0"
           >
             {loading ? (
               <>
@@ -321,22 +321,22 @@ export default function LoginPage() {
         </form>
 
         {/* Footer links */}
-        <div className="mt-6 pt-6 border-t border-gray-100 flex items-center justify-between text-xs text-charcoal/60">
+        <div className="mt-6 pt-6 border-t border-slate-100 flex items-center justify-between text-xs text-charcoal-500">
           <span>New to CogniSec?</span>
-          <Link to="/signup" className="text-darkGreen font-semibold hover:underline">
+          <Link to="/signup" className="text-emerald-700 font-bold hover:text-emerald-800 hover:underline">
             Register as Employee
           </Link>
         </div>
 
         {/* Security badge */}
-        <div className="mt-6 flex items-center justify-center gap-1.5 text-[11px] font-mono text-sage">
-          <Lock className="w-3 h-3" />
+        <div className="mt-6 flex items-center justify-center gap-1.5 text-[11px] font-mono text-emerald-800 font-semibold">
+          <Lock className="w-3.5 h-3.5 text-emerald-600" />
           <span>Role authorisation strictly validated by backend</span>
         </div>
       </div>
 
       {/* Page footer */}
-      <div className="text-center text-xs text-charcoal/50">
+      <div className="text-center text-xs text-charcoal-400 font-mono">
         © 2026 CogniSec. Intelligence, Without Exposure.
       </div>
     </div>

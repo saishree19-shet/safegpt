@@ -11,7 +11,7 @@ export default function Footer() {
   };
 
   return (
-    <footer className="bg-white pt-12 pb-16 text-charcoal">
+    <footer className="bg-slate-50/70 border-t border-slate-200/80 pt-16 pb-16 text-charcoal">
       <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
         {/* Main 5-column layout */}
         <div className="grid grid-cols-2 md:grid-cols-6 lg:grid-cols-12 gap-10 lg:gap-8 items-start">
@@ -19,29 +19,33 @@ export default function Footer() {
           {/* Brand info (4 cols on lg) */}
           <div className="col-span-2 md:col-span-2 lg:col-span-4 space-y-3">
             <Link to="/" className="inline-flex items-center gap-2.5 text-darkGreen group">
-              <Shield className="w-5 h-5 stroke-[2.2]" />
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-600 to-darkGreen text-white flex items-center justify-center shadow-2xs">
+                <Shield className="w-4 h-4 stroke-[2.2]" />
+              </div>
               <span className="text-xl font-bold tracking-tight text-darkGreen">
                 CogniSec
               </span>
             </Link>
-            <p className="text-xs sm:text-sm text-charcoal/70 leading-relaxed max-w-xs">
-              Your company knowledge. Protected <br />
-              by design.
+            <p className="text-xs sm:text-sm text-charcoal-500 leading-relaxed max-w-xs font-normal">
+              Zero-Trust Offline AI Assistant for Confidential Company Documents.
             </p>
+            <div className="pt-2 text-xs font-mono text-emerald-800 font-semibold">
+              ● Local Runtime Verified
+            </div>
           </div>
 
           {/* Col 1: Product (2 cols on lg) */}
           <div className="col-span-1 md:col-span-1 lg:col-span-2">
-            <div className="text-xs sm:text-sm font-medium text-darkGreen mb-3 sm:mb-4">
+            <div className="text-xs sm:text-sm font-bold text-darkGreen mb-3 sm:mb-4 uppercase tracking-wider font-mono">
               Product
             </div>
-            <ul className="space-y-2.5 text-xs sm:text-sm text-charcoal/75">
+            <ul className="space-y-2.5 text-xs sm:text-sm text-charcoal-600 font-medium">
               <li>
                 <button
                   onClick={() => scrollTo('product')}
                   className="hover:text-darkGreen transition-colors text-left cursor-pointer"
                 >
-                  Platform
+                  Platform Overview
                 </button>
               </li>
               <li>
@@ -49,7 +53,7 @@ export default function Footer() {
                   onClick={() => scrollTo('how-it-works')}
                   className="hover:text-darkGreen transition-colors text-left cursor-pointer"
                 >
-                  How it works
+                  RAG Pipeline
                 </button>
               </li>
             </ul>
@@ -57,16 +61,16 @@ export default function Footer() {
 
           {/* Col 2: Features (2 cols on lg) */}
           <div className="col-span-1 md:col-span-1 lg:col-span-2">
-            <div className="text-xs sm:text-sm font-medium text-darkGreen mb-3 sm:mb-4">
-              Features
+            <div className="text-xs sm:text-sm font-bold text-darkGreen mb-3 sm:mb-4 uppercase tracking-wider font-mono">
+              Capabilities
             </div>
-            <ul className="space-y-2.5 text-xs sm:text-sm text-charcoal/75">
+            <ul className="space-y-2.5 text-xs sm:text-sm text-charcoal-600 font-medium">
               <li>
                 <button
-                  onClick={() => scrollTo('product')}
+                  onClick={() => scrollTo('features')}
                   className="hover:text-darkGreen transition-colors text-left cursor-pointer"
                 >
-                  Knowledge assistant
+                  Knowledge Assistant
                 </button>
               </li>
               <li>
@@ -74,7 +78,7 @@ export default function Footer() {
                   onClick={() => scrollTo('features')}
                   className="hover:text-darkGreen transition-colors text-left cursor-pointer"
                 >
-                  Transparent answers
+                  Privacy Redaction
                 </button>
               </li>
             </ul>
@@ -82,16 +86,16 @@ export default function Footer() {
 
           {/* Col 3: Security (2 cols on lg) */}
           <div className="col-span-1 md:col-span-1 lg:col-span-2">
-            <div className="text-xs sm:text-sm font-medium text-darkGreen mb-3 sm:mb-4">
+            <div className="text-xs sm:text-sm font-bold text-darkGreen mb-3 sm:mb-4 uppercase tracking-wider font-mono">
               Security
             </div>
-            <ul className="space-y-2.5 text-xs sm:text-sm text-charcoal/75">
+            <ul className="space-y-2.5 text-xs sm:text-sm text-charcoal-600 font-medium">
               <li>
                 <button
                   onClick={() => scrollTo('security')}
                   className="hover:text-darkGreen transition-colors text-left cursor-pointer"
                 >
-                  Privacy by design
+                  Zero-Trust ACLs
                 </button>
               </li>
               <li>
@@ -99,7 +103,7 @@ export default function Footer() {
                   onClick={() => scrollTo('security')}
                   className="hover:text-darkGreen transition-colors text-left cursor-pointer"
                 >
-                  Local infrastructure
+                  Local Infrastructure
                 </button>
               </li>
             </ul>
@@ -107,13 +111,18 @@ export default function Footer() {
 
           {/* Col 4: Account (2 cols on lg) */}
           <div className="col-span-1 md:col-span-1 lg:col-span-2">
-            <div className="text-xs sm:text-sm font-medium text-darkGreen mb-3 sm:mb-4">
-              Account
+            <div className="text-xs sm:text-sm font-bold text-darkGreen mb-3 sm:mb-4 uppercase tracking-wider font-mono">
+              Portals
             </div>
-            <ul className="space-y-2.5 text-xs sm:text-sm text-charcoal/75">
+            <ul className="space-y-2.5 text-xs sm:text-sm text-charcoal-600 font-medium">
               <li>
                 <Link to="/login" className="hover:text-darkGreen transition-colors">
-                  Log in
+                  Employee Portal
+                </Link>
+              </li>
+              <li>
+                <Link to="/login" className="hover:text-darkGreen transition-colors">
+                  Admin Console
                 </Link>
               </li>
               <li>
@@ -127,8 +136,13 @@ export default function Footer() {
         </div>
 
         {/* Monospace Copyright Row */}
-        <div className="mt-16 sm:mt-24 text-left font-mono text-[11px] sm:text-xs text-charcoal/70">
-          © 2026 CogniSec. All rights reserved.
+        <div className="mt-14 pt-8 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4 font-mono text-[11px] sm:text-xs text-charcoal-400">
+          <div>© 2026 CogniSec Enterprise. Confidential & Proprietary.</div>
+          <div className="flex items-center gap-4 text-emerald-800 font-semibold">
+            <span>Security Status: Nominal</span>
+            <span>•</span>
+            <span>Zero Cloud Ingestion</span>
+          </div>
         </div>
       </div>
     </footer>

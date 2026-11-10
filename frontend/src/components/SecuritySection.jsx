@@ -13,45 +13,50 @@ export default function SecuritySection() {
     {
       icon: Server,
       title: 'Local AI Processing',
-      description: 'Run open-weight models locally on company-controlled hardware. Document data and search queries never leave your perimeter.'
+      description: 'Run open-weight models locally on company-controlled hardware. Document data and search queries never leave your private network boundary.',
+      tag: 'Offline Runtime'
     },
     {
       icon: KeyRound,
       title: 'Permission-Aware Retrieval',
-      description: 'SQL-level authorization checks verify document ownership and explicit read grants before vector retrieval takes place.'
+      description: 'SQL-level authorization checks verify document ownership and explicit read grants before vector retrieval takes place.',
+      tag: 'Zero-Trust ACL'
     },
     {
       icon: EyeOff,
       title: 'Sensitive Data Protection',
-      description: 'Configurable detection sanitizes emails, phone numbers, API keys, credentials and personal data prior to prompt compilation.'
+      description: 'Configurable detection sanitizes emails, phone numbers, API keys, credentials, and personal data prior to prompt compilation.',
+      tag: 'PII Sanitized'
     },
     {
       icon: FileCheck2,
       title: 'Transparent Answers',
-      description: 'Per-claim factual validation matches model assertions back to source chunks, eliminating ungrounded hallucinations.'
+      description: 'Per-claim factual validation matches model assertions back to source chunks, eliminating ungrounded hallucinations.',
+      tag: 'Grounded Proof'
     },
     {
       icon: ScrollText,
       title: 'Security Audit Logging',
-      description: 'Comprehensive, metadata-allowlisted audit records track user access, searches, permissions, and security events.'
+      description: 'Comprehensive, metadata-allowlisted audit records track user access, searches, permissions, and security events.',
+      tag: 'Immutable Trail'
     }
   ];
 
   return (
-    <section id="security" className="py-20 md:py-32 bg-[#FBFDFB] border-t border-b border-gray-100">
+    <section id="security" className="py-20 md:py-32 bg-slate-50/50 border-t border-b border-slate-200/80">
       <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
         {/* Section Header */}
         <div className="max-w-3xl mb-16 md:mb-20">
           <div className="mb-4">
-            <span className="font-mono text-xs tracking-[0.2em] uppercase text-sage font-medium">
+            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 font-mono text-xs tracking-wider uppercase font-semibold">
               ZERO-TRUST ARCHITECTURE
             </span>
           </div>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-darkGreen tracking-tight leading-tight">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-darkGreen tracking-tight leading-tight">
             Security and privacy, <br />
-            enforced at every layer.
+            <span className="text-emerald-700">enforced at every layer.</span>
           </h2>
-          <p className="mt-4 text-base sm:text-lg text-charcoal/70 leading-relaxed">
+          <p className="mt-4 text-base sm:text-lg text-charcoal-600 leading-relaxed font-normal">
             CogniSec combines strict application-level access controls, client-side data isolation, and local language models to keep enterprise assets confidential.
           </p>
         </div>
@@ -63,43 +68,45 @@ export default function SecuritySection() {
             return (
               <div
                 key={idx}
-                className="bg-white border border-gray-200/80 rounded-2xl p-6 sm:p-7 shadow-xs hover:border-softGreen transition-all hover:shadow-sm group flex flex-col justify-between"
+                className="bg-white border border-slate-200/90 rounded-2xl p-6 sm:p-7 shadow-2xs hover:border-emerald-300 transition-all hover:shadow-card group flex flex-col justify-between"
               >
                 <div>
-                  <div className="w-10 h-10 rounded-xl bg-mint-100 border border-mint-border flex items-center justify-center text-darkGreen mb-5 group-hover:bg-darkGreen group-hover:text-white transition-colors">
-                    <Icon className="w-5 h-5 stroke-[1.8]" />
+                  <div className="w-11 h-11 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-700 mb-5 group-hover:bg-darkGreen group-hover:text-white transition-colors shadow-2xs">
+                    <Icon className="w-5 h-5 stroke-[2]" />
                   </div>
                   <h3 className="text-lg font-bold text-darkGreen tracking-tight mb-2.5">
                     {item.title}
                   </h3>
-                  <p className="text-sm text-charcoal/75 leading-relaxed">
+                  <p className="text-sm text-charcoal-600 leading-relaxed font-normal">
                     {item.description}
                   </p>
                 </div>
 
-                <div className="pt-6 mt-6 border-t border-gray-100 flex items-center text-xs font-mono text-sage">
-                  <span>Enforced at backend</span>
+                <div className="pt-6 mt-6 border-t border-slate-100 flex items-center justify-between text-xs font-mono">
+                  <span className="text-charcoal-400">Enforced at backend</span>
+                  <span className="text-emerald-700 font-semibold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200/60">{item.tag}</span>
                 </div>
               </div>
             );
           })}
 
           {/* 6th Card: Security Commitment Statement */}
-          <div className="bg-darkGreen text-white rounded-2xl p-6 sm:p-7 shadow-sm border border-darkGreen flex flex-col justify-between">
+          <div className="bg-gradient-to-br from-darkGreen-900 to-darkGreen-950 text-white rounded-2xl p-6 sm:p-7 shadow-lg border border-darkGreen-800 flex flex-col justify-between ring-1 ring-white/10">
             <div>
-              <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-softGreen mb-5">
+              <div className="w-11 h-11 rounded-xl bg-white/10 border border-white/10 flex items-center justify-center text-emerald-400 mb-5">
                 <Shield className="w-5 h-5" />
               </div>
               <h3 className="text-lg font-bold text-white tracking-tight mb-2.5">
                 Privacy by Design
               </h3>
-              <p className="text-sm text-mint-100/80 leading-relaxed">
-                Raw sensitive information is strictly filtered from prompts and logs. We treat every internal document as strictly confidential.
+              <p className="text-sm text-slate-300 leading-relaxed font-normal">
+                Raw confidential data is strictly filtered from prompt contexts and audit logs. The system fails closed: when in doubt, access is denied.
               </p>
             </div>
 
-            <div className="pt-6 mt-6 border-t border-white/10 flex items-center text-xs font-mono text-softGreen">
+            <div className="pt-6 mt-6 border-t border-white/10 flex items-center justify-between text-xs font-mono text-emerald-400 font-semibold">
               <span>Fail-closed guarantee</span>
+              <span className="bg-white/10 px-2 py-0.5 rounded text-emerald-300">RFC Compliant</span>
             </div>
           </div>
         </div>

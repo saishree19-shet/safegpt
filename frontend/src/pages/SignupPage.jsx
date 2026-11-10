@@ -101,28 +101,28 @@ export default function SignupPage() {
   // ── Success screen ─────────────────────────────────────────────────────
   if (success) {
     return (
-      <div className="min-h-screen bg-[#FBFDFB] flex items-center justify-center p-6">
-        <div className="max-w-md w-full text-center bg-white border border-gray-200/80 rounded-2xl p-10 shadow-sm">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-mint-100 border border-mint-border mb-5">
-            <CheckCircle2 className="w-7 h-7 text-darkGreen stroke-[1.8]" />
+      <div className="min-h-screen bg-slate-50/60 flex items-center justify-center p-6">
+        <div className="max-w-md w-full text-center bg-white border border-slate-200/90 rounded-2xl p-10 shadow-card">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-emerald-50 border border-emerald-200 mb-5 shadow-2xs">
+            <CheckCircle2 className="w-7 h-7 text-emerald-600 stroke-[2]" />
           </div>
-          <h2 className="text-2xl font-bold text-darkGreen tracking-tight">Account created</h2>
-          <p className="text-sm text-charcoal/70 mt-2 leading-relaxed">
+          <h2 className="text-2xl font-extrabold text-darkGreen tracking-tight">Account created successfully</h2>
+          <p className="text-sm text-charcoal-600 mt-2 leading-relaxed font-normal">
             Your employee account has been registered. Redirecting you to sign in…
           </p>
-          <div className="mt-6 w-6 h-6 border-2 border-darkGreen/20 border-t-darkGreen rounded-full animate-spin mx-auto" />
+          <div className="mt-6 w-6 h-6 border-2 border-emerald-200 border-t-emerald-600 rounded-full animate-spin mx-auto" />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#FBFDFB] flex flex-col justify-between p-6 sm:p-10 font-sans">
+    <div className="min-h-screen bg-slate-50/60 flex flex-col justify-between p-6 sm:p-10 font-sans">
       {/* Top nav */}
       <div>
         <Link
           to="/"
-          className="inline-flex items-center gap-2 text-sm text-charcoal/70 hover:text-darkGreen transition-colors"
+          className="inline-flex items-center gap-2 text-sm text-charcoal-600 hover:text-darkGreen transition-colors font-medium"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>Back to CogniSec</span>
@@ -130,25 +130,25 @@ export default function SignupPage() {
       </div>
 
       {/* Card */}
-      <div className="max-w-md w-full mx-auto bg-white border border-gray-200/80 rounded-2xl p-8 sm:p-10 shadow-sm my-8">
+      <div className="max-w-md w-full mx-auto bg-white border border-slate-200/90 rounded-2xl p-8 sm:p-10 shadow-card my-8">
         {/* Logo */}
         <div className="flex items-center gap-2.5 text-darkGreen mb-6">
-          <div className="w-8 h-8 rounded-lg bg-mint-100 border border-mint-border flex items-center justify-center">
-            <Shield className="w-5 h-5 text-darkGreen stroke-[2.2]" />
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-600 to-darkGreen text-white flex items-center justify-center shadow-xs">
+            <Shield className="w-5 h-5 stroke-[2.2]" />
           </div>
           <span className="text-xl font-bold tracking-tight text-darkGreen">CogniSec</span>
         </div>
 
-        <h1 className="text-2xl font-bold text-darkGreen tracking-tight">Get Started</h1>
-        <p className="text-sm text-charcoal/70 mt-1 mb-8">
-          Create your employee account to access company files within your role's permissions.
+        <h1 className="text-2xl font-extrabold text-darkGreen tracking-tight">Get Started</h1>
+        <p className="text-sm text-charcoal-500 mt-1 mb-8 font-medium">
+          Create your employee account to query company documents within your verified role permissions.
         </p>
 
         {/* Global error banner */}
         {error && (
           <div
             role="alert"
-            className="mb-5 px-4 py-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-700"
+            className="mb-5 px-4 py-3 rounded-xl bg-rose-50 border border-rose-200 text-sm text-rose-800 font-medium"
           >
             {error}
           </div>
@@ -159,7 +159,7 @@ export default function SignupPage() {
           <div>
             <label
               htmlFor="full_name"
-              className="block text-xs font-mono uppercase tracking-wider text-charcoal/70 font-medium mb-1.5"
+              className="block text-xs font-mono uppercase tracking-wider text-charcoal-700 font-bold mb-1.5"
             >
               Full Name
             </label>
@@ -171,14 +171,14 @@ export default function SignupPage() {
               value={form.full_name}
               onChange={set('full_name')}
               disabled={loading}
-              className={`w-full px-3.5 py-2.5 rounded-lg border text-sm focus:outline-none focus:ring-1 transition-all disabled:opacity-60 ${
+              className={`w-full px-3.5 py-2.5 rounded-xl border text-sm font-medium bg-slate-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all disabled:opacity-60 text-charcoal-900 ${
                 fieldErrors.full_name
-                  ? 'border-red-400 focus:border-red-400 focus:ring-red-300'
-                  : 'border-gray-200 focus:border-darkGreen focus:ring-darkGreen'
+                  ? 'border-rose-400 focus:border-rose-500'
+                  : 'border-slate-200 focus:border-emerald-600'
               }`}
             />
             {fieldErrors.full_name && (
-              <p className="mt-1 text-xs text-red-600">{fieldErrors.full_name}</p>
+              <p className="mt-1 text-xs text-rose-600 font-medium">{fieldErrors.full_name}</p>
             )}
           </div>
 
@@ -186,7 +186,7 @@ export default function SignupPage() {
           <div>
             <label
               htmlFor="signup_email"
-              className="block text-xs font-mono uppercase tracking-wider text-charcoal/70 font-medium mb-1.5"
+              className="block text-xs font-mono uppercase tracking-wider text-charcoal-700 font-bold mb-1.5"
             >
               Work Email
             </label>
@@ -198,14 +198,14 @@ export default function SignupPage() {
               value={form.email}
               onChange={set('email')}
               disabled={loading}
-              className={`w-full px-3.5 py-2.5 rounded-lg border text-sm focus:outline-none focus:ring-1 transition-all disabled:opacity-60 ${
+              className={`w-full px-3.5 py-2.5 rounded-xl border text-sm font-medium bg-slate-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all disabled:opacity-60 text-charcoal-900 ${
                 fieldErrors.email
-                  ? 'border-red-400 focus:border-red-400 focus:ring-red-300'
-                  : 'border-gray-200 focus:border-darkGreen focus:ring-darkGreen'
+                  ? 'border-rose-400 focus:border-rose-500'
+                  : 'border-slate-200 focus:border-emerald-600'
               }`}
             />
             {fieldErrors.email && (
-              <p className="mt-1 text-xs text-red-600">{fieldErrors.email}</p>
+              <p className="mt-1 text-xs text-rose-600 font-medium">{fieldErrors.email}</p>
             )}
           </div>
 
@@ -213,7 +213,7 @@ export default function SignupPage() {
           <div>
             <label
               htmlFor="signup_password"
-              className="block text-xs font-mono uppercase tracking-wider text-charcoal/70 font-medium mb-1.5"
+              className="block text-xs font-mono uppercase tracking-wider text-charcoal-700 font-bold mb-1.5"
             >
               Password
             </label>
@@ -226,23 +226,23 @@ export default function SignupPage() {
                 value={form.password}
                 onChange={set('password')}
                 disabled={loading}
-                className={`w-full px-3.5 py-2.5 pr-11 rounded-lg border text-sm focus:outline-none focus:ring-1 transition-all disabled:opacity-60 ${
+                className={`w-full px-3.5 py-2.5 pr-11 rounded-xl border text-sm font-medium bg-slate-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all disabled:opacity-60 text-charcoal-900 ${
                   fieldErrors.password
-                    ? 'border-red-400 focus:border-red-400 focus:ring-red-300'
-                    : 'border-gray-200 focus:border-darkGreen focus:ring-darkGreen'
+                    ? 'border-rose-400 focus:border-rose-500'
+                    : 'border-slate-200 focus:border-emerald-600'
                 }`}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword((v) => !v)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-charcoal/40 hover:text-charcoal/70 transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-charcoal-400 hover:text-charcoal-700 transition-colors p-1 cursor-pointer"
                 aria-label={showPassword ? 'Hide password' : 'Show password'}
               >
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
             {fieldErrors.password && (
-              <p className="mt-1 text-xs text-red-600">{fieldErrors.password}</p>
+              <p className="mt-1 text-xs text-rose-600 font-medium">{fieldErrors.password}</p>
             )}
           </div>
 
@@ -250,7 +250,7 @@ export default function SignupPage() {
           <div>
             <label
               htmlFor="confirm_password"
-              className="block text-xs font-mono uppercase tracking-wider text-charcoal/70 font-medium mb-1.5"
+              className="block text-xs font-mono uppercase tracking-wider text-charcoal-700 font-bold mb-1.5"
             >
               Confirm Password
             </label>
@@ -263,23 +263,23 @@ export default function SignupPage() {
                 value={form.confirmPassword}
                 onChange={set('confirmPassword')}
                 disabled={loading}
-                className={`w-full px-3.5 py-2.5 pr-11 rounded-lg border text-sm focus:outline-none focus:ring-1 transition-all disabled:opacity-60 ${
+                className={`w-full px-3.5 py-2.5 pr-11 rounded-xl border text-sm font-medium bg-slate-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all disabled:opacity-60 text-charcoal-900 ${
                   fieldErrors.confirmPassword
-                    ? 'border-red-400 focus:border-red-400 focus:ring-red-300'
-                    : 'border-gray-200 focus:border-darkGreen focus:ring-darkGreen'
+                    ? 'border-rose-400 focus:border-rose-500'
+                    : 'border-slate-200 focus:border-emerald-600'
                 }`}
               />
               <button
                 type="button"
                 onClick={() => setShowConfirm((v) => !v)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-charcoal/40 hover:text-charcoal/70 transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-charcoal-400 hover:text-charcoal-700 transition-colors p-1 cursor-pointer"
                 aria-label={showConfirm ? 'Hide confirm password' : 'Show confirm password'}
               >
                 {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
             {fieldErrors.confirmPassword && (
-              <p className="mt-1 text-xs text-red-600">{fieldErrors.confirmPassword}</p>
+              <p className="mt-1 text-xs text-rose-600 font-medium">{fieldErrors.confirmPassword}</p>
             )}
           </div>
 
@@ -287,36 +287,36 @@ export default function SignupPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-darkGreen text-white rounded-lg py-3 text-sm font-medium hover:bg-darkGreen/90 transition-all shadow-xs mt-2 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="w-full bg-darkGreen text-white rounded-xl py-3.5 text-sm font-semibold hover:bg-darkGreen-800 transition-all shadow-sm hover:shadow-md mt-3 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer active:translate-y-0"
           >
             {loading ? (
               <>
                 <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                Creating account…
+                <span>Creating account…</span>
               </>
             ) : (
-              'Create Account'
+              <span>Create Account</span>
             )}
           </button>
         </form>
 
         {/* Footer links */}
-        <div className="mt-6 pt-6 border-t border-gray-100 flex items-center justify-between text-xs text-charcoal/60">
+        <div className="mt-6 pt-6 border-t border-slate-100 flex items-center justify-between text-xs text-charcoal-500">
           <span>Already registered?</span>
-          <Link to="/login" className="text-darkGreen font-semibold hover:underline">
+          <Link to="/login" className="text-emerald-700 font-bold hover:text-emerald-800 hover:underline">
             Sign in
           </Link>
         </div>
 
         {/* Security note */}
-        <div className="mt-6 flex items-center justify-center gap-1.5 text-[11px] font-mono text-sage">
-          <CheckCircle2 className="w-3.5 h-3.5 text-softGreen" />
-          <span>Default employee role assigned · Admin approval required for elevated scopes</span>
+        <div className="mt-6 flex items-center justify-center gap-1.5 text-[11px] font-mono text-emerald-800 font-semibold text-center">
+          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+          <span>Default employee role assigned · Zero-trust role enforcement</span>
         </div>
       </div>
 
       {/* Page footer */}
-      <div className="text-center text-xs text-charcoal/50">
+      <div className="text-center text-xs text-charcoal-400 font-mono">
         © 2026 CogniSec. Intelligence, Without Exposure.
       </div>
     </div>

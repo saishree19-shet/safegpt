@@ -68,15 +68,16 @@ export default function HowItWorks() {
       {/* Section Header */}
       <div className="max-w-3xl mb-16 md:mb-20">
         <div className="mb-4">
-          <span className="font-mono text-xs tracking-[0.2em] uppercase text-sage font-medium">
-            STEP-BY-STEP WORKFLOW
+          <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 font-mono text-xs tracking-wider uppercase font-semibold">
+            STEP-BY-STEP RAG PIPELINE
           </span>
         </div>
-        <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-darkGreen tracking-tight leading-tight">
-          A clear path to a trusted answer.
+        <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-darkGreen tracking-tight leading-tight">
+          A clear, verifiable path <br />
+          <span className="text-emerald-700">to every single answer.</span>
         </h2>
-        <p className="mt-4 text-base sm:text-lg text-charcoal/70 leading-relaxed">
-          From ingestion to answer synthesis, every step is built around access control, privacy protection, and transparent source validation.
+        <p className="mt-4 text-base sm:text-lg text-charcoal-600 leading-relaxed font-normal">
+          From multi-format ingestion to final answer synthesis, every step is rigorously governed by access control, privacy protection, and transparent source validation.
         </p>
       </div>
 
@@ -88,27 +89,27 @@ export default function HowItWorks() {
             return (
               <div
                 key={idx}
-                className="bg-darkGreen text-white rounded-2xl p-6 sm:p-7 shadow-lg border border-darkGreen md:col-span-2 lg:col-span-3 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 hover:shadow-xl transition-all"
+                className="bg-gradient-to-r from-darkGreen-900 to-darkGreen-950 text-white rounded-2xl p-6 sm:p-8 shadow-xl border border-darkGreen-800 md:col-span-2 lg:col-span-3 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 hover:shadow-2xl transition-all ring-1 ring-white/10"
               >
                 <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center text-softGreen shrink-0">
+                  <div className="w-12 h-12 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center text-emerald-400 shrink-0">
                     <Icon className="w-6 h-6 stroke-[2]" />
                   </div>
                   <div>
-                    <div className="text-xs font-mono tracking-widest text-softGreen uppercase font-bold mb-1">
+                    <div className="text-xs font-mono tracking-widest text-emerald-400 uppercase font-bold mb-1">
                       STEP {step.number} — FINAL STEP
                     </div>
                     <h3 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
                       {step.title}
                     </h3>
-                    <p className="text-sm text-mint-100/80 mt-1 max-w-2xl leading-relaxed">
+                    <p className="text-sm text-slate-300 mt-1 max-w-2xl leading-relaxed font-normal">
                       {step.description}
                     </p>
                   </div>
                 </div>
 
-                <div className="shrink-0 flex items-center gap-2 text-xs font-mono font-medium bg-white/10 px-4 py-2 rounded-lg border border-white/15">
-                  <span className="w-2 h-2 rounded-full bg-softGreen"></span>
+                <div className="shrink-0 flex items-center gap-2.5 text-xs font-mono font-semibold bg-white/10 px-4 py-2.5 rounded-xl border border-white/15 text-emerald-300">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                   <span>100% Traceable Evidence</span>
                 </div>
               </div>
@@ -118,28 +119,29 @@ export default function HowItWorks() {
           return (
             <div
               key={idx}
-              className="bg-mint-100 border border-mint-border rounded-2xl p-6 sm:p-7 shadow-2xs hover:border-softGreen transition-all hover:bg-mint-50 flex flex-col justify-between"
+              className="bg-white border border-slate-200/90 rounded-2xl p-6 sm:p-7 shadow-2xs hover:border-emerald-300 transition-all hover:shadow-card flex flex-col justify-between group"
             >
               <div>
                 <div className="flex items-center justify-between mb-5">
-                  <span className="text-xs font-mono font-bold text-sage tracking-wider">
-                    {step.number}
+                  <span className="text-xs font-mono font-bold text-emerald-700 bg-emerald-50 border border-emerald-100 px-2.5 py-0.5 rounded-md tracking-wider">
+                    STEP {step.number}
                   </span>
-                  <div className="w-8 h-8 rounded-lg bg-white border border-mint-border flex items-center justify-center text-darkGreen">
-                    <Icon className="w-4 h-4 stroke-[1.8]" />
+                  <div className="w-9 h-9 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-center text-darkGreen group-hover:bg-emerald-50 group-hover:text-emerald-700 transition-colors">
+                    <Icon className="w-4 h-4 stroke-[2]" />
                   </div>
                 </div>
 
                 <h3 className="text-base sm:text-lg font-bold text-darkGreen tracking-tight mb-2">
                   {step.title}
                 </h3>
-                <p className="text-xs sm:text-sm text-charcoal/70 leading-relaxed">
+                <p className="text-xs sm:text-sm text-charcoal-600 leading-relaxed font-normal">
                   {step.description}
                 </p>
               </div>
 
-              <div className="pt-4 mt-4 border-t border-mint-border/60 flex items-center text-[11px] font-mono text-sage">
+              <div className="pt-4 mt-4 border-t border-slate-100 flex items-center justify-between text-[11px] font-mono text-charcoal-400">
                 <span>Verified pipeline stage</span>
+                <span className="text-emerald-700 font-semibold">Active</span>
               </div>
             </div>
           );

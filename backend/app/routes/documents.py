@@ -8,7 +8,10 @@ from typing import Optional
 try:
     import pymupdf as fitz
 except ImportError:
-    import fitz
+    try:
+        import fitz
+    except ImportError:
+        fitz = None
 
 from docx import Document as WordDocument
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
@@ -66,6 +69,11 @@ ALLOWED_EXTENSIONS = {".pdf", ".docx"}
 
 def extract_pdf_text(file_path: Path) -> list[dict]:
     """Extract text from each PDF page while preserving page numbers."""
+    if fitz is None:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="PDF processing library (PyMuPDF) is not installed on this system.",
+        )
     pages = []
 
     try:
