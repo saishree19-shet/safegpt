@@ -84,6 +84,10 @@ export default function DocumentUploadModal({ isOpen, onClose, onUploadSuccess }
         setError(detail || 'Could not extract text. Scanned or image-only documents are unsupported.');
       } else if (status === 400) {
         setError(detail || 'Invalid or password-protected document.');
+      } else if (status === 502 || status === 503) {
+        setError(detail || 'Indexing service error. Please verify Ollama is running.');
+      } else if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
+        setError('Document indexing took longer than expected. Large documents are still being embedded in the background; please check the Documents tab shortly.');
       } else {
         setError(detail || 'Upload failed. Please check your connection and try again.');
       }
@@ -216,7 +220,7 @@ export default function DocumentUploadModal({ isOpen, onClose, onUploadSuccess }
                   <div className="flex items-center justify-between text-xs text-charcoal/60">
                     <span className="flex items-center gap-1.5 font-mono">
                       <Loader2 className="w-3.5 h-3.5 animate-spin text-darkGreen" />
-                      Uploading & processing…
+                      {progress >= 100 ? 'Indexing chunks & generating embeddings with Ollama…' : 'Uploading & processing…'}
                     </span>
                     <span className="font-mono font-medium">{progress}%</span>
                   </div>

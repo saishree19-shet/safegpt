@@ -224,24 +224,66 @@ def upload_document(
         # Ingest chunks and embeddings for semantic search
         chunk_count = 0
         embedding_status = "pending"
+        # Capture document_id before any potential rollback invalidates the ORM object
+        doc_id = record.id
         try:
-            stored_chunks = ingest_document_chunks_and_embeddings(record.id, db)
+            stored_chunks = ingest_document_chunks_and_embeddings(doc_id, db)
             chunk_count = len(stored_chunks)
             embedding_status = "completed" if chunk_count > 0 else "no_text"
         except OllamaConnectionError as err:
+            db.rollback()
+            if stored_path.exists():
+                stored_path.unlink(missing_ok=True)
             logger.warning(
                 "Ollama embedding service unavailable during upload for doc %d: %s",
-                record.id,
+                doc_id,
                 err,
             )
-            embedding_status = "service_unavailable"
+            # Audit the failure on a fresh transaction
+            log_event(
+                db,
+                event_type=DOCUMENT_UPLOAD,
+                event_status=STATUS_FAILURE,
+                user_id=current_user.id,
+                resource_type=RESOURCE_DOCUMENT,
+                resource_id=doc_id,
+                details={"reason": "ollama_unavailable"},
+            )
+            try:
+                db.commit()
+            except Exception:
+                db.rollback()
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Document indexing failed: Ollama embedding service is unavailable. Please ensure Ollama is running.",
+            )
         except EmbeddingError as err:
+            db.rollback()
+            if stored_path.exists():
+                stored_path.unlink(missing_ok=True)
             logger.error(
                 "Embedding generation failed during upload for doc %d: %s",
-                record.id,
+                doc_id,
                 err,
             )
-            embedding_status = "failed"
+            # Audit the failure on a fresh transaction
+            log_event(
+                db,
+                event_type=DOCUMENT_UPLOAD,
+                event_status=STATUS_FAILURE,
+                user_id=current_user.id,
+                resource_type=RESOURCE_DOCUMENT,
+                resource_id=doc_id,
+                details={"reason": "embedding_failed"},
+            )
+            try:
+                db.commit()
+            except Exception:
+                db.rollback()
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail="Document indexing failed: embedding generation encountered an error.",
+            )
 
         # Audit: DOCUMENT_UPLOAD
         rec = log_event(

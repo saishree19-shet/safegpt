@@ -105,7 +105,7 @@ class OllamaChatClient:
             "options": {
                 "temperature": temperature,
                 "top_p": 0.9,
-                "num_predict": 300,
+                "num_predict": 1024,
             },
         }
 

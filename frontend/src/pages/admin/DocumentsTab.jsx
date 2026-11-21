@@ -12,6 +12,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   FileText,
+  Upload,
   RefreshCw,
   AlertCircle,
   ShieldCheck,
@@ -26,6 +27,7 @@ import {
   FileCode,
 } from 'lucide-react';
 import { listDocuments, getDocument } from '../../api/documents';
+import DocumentUploadModal from '../employee/DocumentUploadModal';
 
 export default function DocumentsTab({ onManagePermissions }) {
   const [documents, setDocuments] = useState([]);
@@ -34,6 +36,7 @@ export default function DocumentsTab({ onManagePermissions }) {
   const [selectedDoc, setSelectedDoc] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState('');
+  const [isUploadOpen, setIsUploadOpen] = useState(false);
 
   async function loadDocuments() {
     setLoading(true);
@@ -84,14 +87,24 @@ export default function DocumentsTab({ onManagePermissions }) {
           </p>
         </div>
 
-        <button
-          onClick={loadDocuments}
-          disabled={loading}
-          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white border border-gray-200/90 text-xs font-medium text-charcoal/80 hover:text-darkGreen hover:border-darkGreen/40 shadow-2xs transition-all cursor-pointer disabled:opacity-50"
-        >
-          <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-          <span>Refresh</span>
-        </button>
+        <div className="flex items-center gap-2.5">
+          <button
+            onClick={() => setIsUploadOpen(true)}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-darkGreen text-white text-xs font-medium hover:bg-darkGreen/90 shadow-2xs transition-all cursor-pointer"
+          >
+            <Upload className="w-3.5 h-3.5" />
+            <span>Upload Document</span>
+          </button>
+
+          <button
+            onClick={loadDocuments}
+            disabled={loading}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white border border-gray-200/90 text-xs font-medium text-charcoal/80 hover:text-darkGreen hover:border-darkGreen/40 shadow-2xs transition-all cursor-pointer disabled:opacity-50"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+            <span>Refresh</span>
+          </button>
+        </div>
       </div>
 
       {/* ── Zero-Trust Access Boundary Banner ──────────────────────── */}
@@ -356,6 +369,16 @@ export default function DocumentsTab({ onManagePermissions }) {
           </div>
         </div>
       )}
+
+      {/* ── Document Upload Modal ─────────────────────────────────── */}
+      <DocumentUploadModal
+        isOpen={isUploadOpen}
+        onClose={() => setIsUploadOpen(false)}
+        onUploadSuccess={() => {
+          setIsUploadOpen(false);
+          loadDocuments();
+        }}
+      />
     </div>
   );
 }

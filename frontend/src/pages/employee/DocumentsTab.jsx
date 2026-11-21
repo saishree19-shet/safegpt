@@ -19,12 +19,18 @@ import {
   AlertCircle,
   Eye,
   Lock,
+  User,
+  Building,
 } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 import { listDocuments } from '../../api/documents';
 import DocumentUploadModal from './DocumentUploadModal';
 import DocumentDetailModal from './DocumentDetailModal';
 
 export default function DocumentsTab() {
+  const { user } = useAuth();
+  const canUpload = Boolean(user);
+
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -98,13 +104,15 @@ export default function DocumentsTab() {
           >
             <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin text-darkGreen' : ''}`} />
           </button>
-          <button
-            onClick={() => setIsUploadOpen(true)}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-darkGreen text-white text-xs font-medium hover:bg-darkGreen/90 transition-all shadow-xs cursor-pointer"
-          >
-            <FileUp className="w-3.5 h-3.5" />
-            <span>Upload Document</span>
-          </button>
+          {canUpload && (
+            <button
+              onClick={() => setIsUploadOpen(true)}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-darkGreen text-white text-xs font-medium hover:bg-darkGreen/90 transition-all shadow-xs cursor-pointer"
+            >
+              <FileUp className="w-3.5 h-3.5" />
+              <span>Upload Document</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -125,9 +133,9 @@ export default function DocumentsTab() {
         {/* Ownership Filter Pills */}
         <div className="flex items-center gap-1.5 self-start sm:self-auto text-xs">
           {[
-            { id: 'all', label: 'All Documents' },
-            { id: 'mine', label: 'Owned by Me' },
-            { id: 'shared', label: 'Shared with Me' },
+            { id: 'all', label: 'All Accessible' },
+            { id: 'mine', label: 'My Personal Uploads' },
+            { id: 'shared', label: 'Company Knowledge' },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -179,10 +187,12 @@ export default function DocumentsTab() {
               <p className="text-xs text-charcoal/60 mt-1 max-w-sm mx-auto">
                 {searchQuery || filterOwner !== 'all'
                   ? 'Try adjusting your search query or ownership filter.'
-                  : 'Upload PDF or Word documents to build your company knowledge base.'}
+                  : canUpload
+                    ? 'Upload PDF or Word documents to build your company knowledge base.'
+                    : 'Authorized company documents will appear here once granted by an administrator.'}
               </p>
             </div>
-            {!searchQuery && filterOwner === 'all' && (
+            {!searchQuery && filterOwner === 'all' && canUpload && (
               <button
                 onClick={() => setIsUploadOpen(true)}
                 className="mt-2 inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-darkGreen text-white text-xs font-medium hover:bg-darkGreen/90 transition-all cursor-pointer shadow-xs"
@@ -236,13 +246,14 @@ export default function DocumentsTab() {
                     {/* Owner / Access */}
                     <td className="py-3.5 px-5 whitespace-nowrap">
                       {doc.is_owner ? (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-mint-100 text-darkGreen text-[11px] font-medium">
-                          <span>Owner (You)</span>
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-mint-100 text-darkGreen text-[11px] font-semibold border border-mint-border">
+                          <User className="w-3 h-3 text-darkGreen" />
+                          <span>Personal Document</span>
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-gray-100 text-charcoal/70 text-[11px]">
-                          <Lock className="w-2.5 h-2.5 text-sage" />
-                          <span>Shared with read access</span>
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-gray-100 text-charcoal/80 text-[11px] font-medium border border-gray-200">
+                          <Building className="w-3 h-3 text-sage" />
+                          <span>Company Knowledge</span>
                         </span>
                       )}
                     </td>
@@ -282,11 +293,13 @@ export default function DocumentsTab() {
       </div>
 
       {/* Modals */}
-      <DocumentUploadModal
-        isOpen={isUploadOpen}
-        onClose={() => setIsUploadOpen(false)}
-        onUploadSuccess={() => fetchDocuments(true)}
-      />
+      {canUpload && (
+        <DocumentUploadModal
+          isOpen={isUploadOpen}
+          onClose={() => setIsUploadOpen(false)}
+          onUploadSuccess={() => fetchDocuments(true)}
+        />
+      )}
 
       <DocumentDetailModal
         documentId={selectedDocId}

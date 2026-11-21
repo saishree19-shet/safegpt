@@ -33,7 +33,7 @@ export async function uploadDocument(file, onProgress) {
     headers: {
       'Content-Type': 'multipart/form-data',
     },
-    timeout: 60000, // uploads & embedding can take time
+    timeout: 300000, // 5 min timeout for document extraction, chunking, and Ollama embeddings
     onUploadProgress: (progressEvent) => {
       if (onProgress && progressEvent.total) {
         const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);

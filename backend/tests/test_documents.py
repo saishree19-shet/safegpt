@@ -161,15 +161,59 @@ def test_upload_requires_authentication(client):
     assert res_inactive.status_code == 401
 
 
+# 1b. Model B: employee can upload personal document, isolated from other employees
+def test_employee_can_upload_personal_document(client, auth_headers, test_user, db_session, isolated_storage):
+    """Employees can upload personal workspace documents (Model B dual-tier)."""
+    pdf_content = make_valid_pdf_bytes("Employee private notes and proposal")
+    response = client.post(
+        "/documents/upload",
+        files={"file": ("my_proposal.pdf", pdf_content, "application/pdf")},
+        headers={**auth_headers},
+    )
+    assert response.status_code == 201
+    data = response.json()
+    assert data["filename"] == "my_proposal.pdf"
+    assert data["document_id"] > 0
+
+    # Verify ownership is set to the uploading employee
+    doc_record = db_session.query(Document).filter(Document.id == data["document_id"]).first()
+    assert doc_record is not None
+    assert doc_record.owner_id == test_user.id
+
+
+def test_employee_upload_isolated_from_other_employees(
+    client, auth_headers, second_headers, test_user, second_user, db_session, isolated_storage
+):
+    """Another employee cannot access an employee's personal upload without explicit grant."""
+    pdf_content = make_valid_pdf_bytes("Alice private personal contract")
+    response = client.post(
+        "/documents/upload",
+        files={"file": ("alice_contract.pdf", pdf_content, "application/pdf")},
+        headers={**auth_headers},
+    )
+    assert response.status_code == 201
+    doc_id = response.json()["document_id"]
+
+    # Second user (Bob) lists documents — Alice's document must NOT appear
+    bob_list_resp = client.get("/documents", headers=second_headers)
+    assert bob_list_resp.status_code == 200
+    bob_doc_ids = [d["id"] for d in bob_list_resp.json()]
+    assert doc_id not in bob_doc_ids
+
+    # Second user (Bob) attempts to retrieve text — must receive 403
+    bob_text_resp = client.get(f"/documents/{doc_id}/text", headers=second_headers)
+    assert bob_text_resp.status_code == 403
+
+
 # 2. PDF upload success and response privacy
-def test_upload_pdf_success(client, auth_headers, test_user, db_session, isolated_storage):
+def test_upload_pdf_success(client, admin_headers, admin_user, db_session, isolated_storage):
     secret_text = "Highly confidential company memo regarding FY27 expansion."
     pdf_content = make_valid_pdf_bytes(secret_text)
 
     response = client.post(
         "/documents/upload",
         files={"file": ("company_memo.pdf", pdf_content, "application/pdf")},
-        headers={**auth_headers},
+        headers={**admin_headers},
     )
 
     assert response.status_code == 201
@@ -193,7 +237,7 @@ def test_upload_pdf_success(client, auth_headers, test_user, db_session, isolate
     assert doc_record is not None
     assert doc_record.title == "company_memo.pdf"
     assert doc_record.filename == "company_memo.pdf"
-    assert doc_record.owner_id == test_user.id
+    assert doc_record.owner_id == admin_user.id
     assert doc_record.status == "uploaded"
 
     # Verify stored file in isolated storage directory
@@ -205,14 +249,14 @@ def test_upload_pdf_success(client, auth_headers, test_user, db_session, isolate
 
 
 # 3. DOCX upload success and response privacy
-def test_upload_docx_success(client, auth_headers, test_user, db_session, isolated_storage):
+def test_upload_docx_success(client, admin_headers, admin_user, db_session, isolated_storage):
     secret_text = "Private corporate roadmap for Q3."
     docx_content = make_valid_docx_bytes(secret_text)
 
     response = client.post(
         "/documents/upload",
         files={"file": ("q3_roadmap.docx", docx_content, "application/vnd.openxmlformats-officedocument.wordprocessingml.document")},
-        headers={**auth_headers},
+        headers={**admin_headers},
     )
 
     assert response.status_code == 201
@@ -232,7 +276,7 @@ def test_upload_docx_success(client, auth_headers, test_user, db_session, isolat
 
     doc_record = db_session.query(Document).filter(Document.id == data["document_id"]).first()
     assert doc_record is not None
-    assert doc_record.owner_id == test_user.id
+    assert doc_record.owner_id == admin_user.id
     assert Path(doc_record.storage_path).exists()
 
 
@@ -247,11 +291,11 @@ def test_upload_docx_success(client, auth_headers, test_user, db_session, isolat
         ("no_extension", b"some bytes", "application/octet-stream"),
     ]
 )
-def test_upload_rejects_invalid_file_types(client, auth_headers, isolated_storage, db_session, filename, content, content_type):
+def test_upload_rejects_invalid_file_types(client, admin_headers, isolated_storage, db_session, filename, content, content_type):
     response = client.post(
         "/documents/upload",
         files={"file": (filename, content, content_type)},
-        headers={**auth_headers},
+        headers={**admin_headers},
     )
 
     assert response.status_code == 400
@@ -263,12 +307,12 @@ def test_upload_rejects_invalid_file_types(client, auth_headers, isolated_storag
 
 
 # 5. Empty file rejected and cleaned up
-def test_upload_empty_file_rejected(client, auth_headers, isolated_storage, db_session):
+def test_upload_empty_file_rejected(client, admin_headers, isolated_storage, db_session):
     for ext in [".pdf", ".docx"]:
         response = client.post(
             "/documents/upload",
             files={"file": (f"empty_document{ext}", b"", "application/octet-stream")},
-            headers={**auth_headers},
+            headers={**admin_headers},
         )
         assert response.status_code == 400
         assert "empty" in response.json()["detail"].lower()
@@ -277,7 +321,7 @@ def test_upload_empty_file_rejected(client, auth_headers, isolated_storage, db_s
 
 
 # 6. File size limits enforced and partial files cleaned up
-def test_upload_file_size_limit_exceeded(client, auth_headers, isolated_storage, db_session, monkeypatch):
+def test_upload_file_size_limit_exceeded(client, admin_headers, isolated_storage, db_session, monkeypatch):
     # Set limit to 500 bytes for deterministic testing
     monkeypatch.setattr(doc_module, "MAX_FILE_SIZE", 500)
 
@@ -287,7 +331,7 @@ def test_upload_file_size_limit_exceeded(client, auth_headers, isolated_storage,
     response = client.post(
         "/documents/upload",
         files={"file": ("oversized.pdf", oversized_content, "application/pdf")},
-        headers={**auth_headers},
+        headers={**admin_headers},
     )
 
     assert response.status_code == 413
@@ -299,12 +343,12 @@ def test_upload_file_size_limit_exceeded(client, auth_headers, isolated_storage,
 
 
 # 7. Corrupt PDF rejection and cleanup
-def test_upload_corrupt_pdf(client, auth_headers, isolated_storage, db_session):
+def test_upload_corrupt_pdf(client, admin_headers, isolated_storage, db_session):
     corrupt_pdf = b"%PDF-1.4\nGarbage data not a valid PDF body"
     response = client.post(
         "/documents/upload",
         files={"file": ("corrupt.pdf", corrupt_pdf, "application/pdf")},
-        headers={**auth_headers},
+        headers={**admin_headers},
     )
 
     assert response.status_code == 400
@@ -314,12 +358,12 @@ def test_upload_corrupt_pdf(client, auth_headers, isolated_storage, db_session):
 
 
 # 8. Corrupt DOCX rejection and cleanup
-def test_upload_corrupt_docx(client, auth_headers, isolated_storage, db_session):
+def test_upload_corrupt_docx(client, admin_headers, isolated_storage, db_session):
     corrupt_docx = b"PK\x03\x04not a valid docx zip structure"
     response = client.post(
         "/documents/upload",
         files={"file": ("corrupt.docx", corrupt_docx, "application/vnd.openxmlformats-officedocument.wordprocessingml.document")},
-        headers={**auth_headers},
+        headers={**admin_headers},
     )
 
     assert response.status_code == 400
@@ -329,12 +373,12 @@ def test_upload_corrupt_docx(client, auth_headers, isolated_storage, db_session)
 
 
 # 9. Password-protected PDF rejection and cleanup
-def test_upload_encrypted_pdf_rejected(client, auth_headers, isolated_storage, db_session):
+def test_upload_encrypted_pdf_rejected(client, admin_headers, isolated_storage, db_session):
     enc_pdf = make_encrypted_pdf_bytes()
     response = client.post(
         "/documents/upload",
         files={"file": ("locked.pdf", enc_pdf, "application/pdf")},
-        headers={**auth_headers},
+        headers={**admin_headers},
     )
 
     assert response.status_code == 400
@@ -344,12 +388,12 @@ def test_upload_encrypted_pdf_rejected(client, auth_headers, isolated_storage, d
 
 
 # 10. PDF with no extracted text (e.g. blank or un-OCRed scan)
-def test_upload_pdf_with_no_text_rejected(client, auth_headers, isolated_storage, db_session):
+def test_upload_pdf_with_no_text_rejected(client, admin_headers, isolated_storage, db_session):
     blank_pdf = make_blank_pdf_bytes()
     response = client.post(
         "/documents/upload",
         files={"file": ("blank_scan.pdf", blank_pdf, "application/pdf")},
-        headers={**auth_headers},
+        headers={**admin_headers},
     )
 
     assert response.status_code == 422
@@ -359,12 +403,12 @@ def test_upload_pdf_with_no_text_rejected(client, auth_headers, isolated_storage
 
 
 # 11. DOCX with no extracted text
-def test_upload_docx_with_no_text_rejected(client, auth_headers, isolated_storage, db_session):
+def test_upload_docx_with_no_text_rejected(client, admin_headers, isolated_storage, db_session):
     blank_docx = make_blank_docx_bytes()
     response = client.post(
         "/documents/upload",
         files={"file": ("blank.docx", blank_docx, "application/vnd.openxmlformats-officedocument.wordprocessingml.document")},
-        headers={**auth_headers},
+        headers={**admin_headers},
     )
 
     assert response.status_code == 422
@@ -374,14 +418,14 @@ def test_upload_docx_with_no_text_rejected(client, auth_headers, isolated_storag
 
 
 # 12. Database persistence error triggers rollback and file cleanup
-def test_upload_database_error_rolls_back_and_removes_file(client, auth_headers, isolated_storage, db_session):
+def test_upload_database_error_rolls_back_and_removes_file(client, admin_headers, isolated_storage, db_session):
     valid_pdf = make_valid_pdf_bytes("Important valid content")
 
     with patch.object(db_session, "commit", side_effect=Exception("Database write failure")):
         response = client.post(
             "/documents/upload",
             files={"file": ("db_fail.pdf", valid_pdf, "application/pdf")},
-            headers={**auth_headers},
+            headers={**admin_headers},
         )
 
     assert response.status_code == 500
@@ -798,7 +842,7 @@ def make_valid_docx_bytes_with_text(text: str = "Internal Policy Document Conten
 # ── 1. PDF text persistence: pages created with correct page numbers ──────────
 
 def test_upload_pdf_persists_text_pages_with_page_numbers(
-    client, auth_headers, isolated_storage, db_session
+    client, admin_headers, isolated_storage, db_session
 ):
     """Uploading a PDF must persist one DocumentTextPage per page, 1-indexed."""
     pdf_bytes, p1_text, p2_text = make_two_page_pdf_bytes()
@@ -806,7 +850,7 @@ def test_upload_pdf_persists_text_pages_with_page_numbers(
     resp = client.post(
         "/documents/upload",
         files={"file": ("report.pdf", pdf_bytes, "application/pdf")},
-        headers=auth_headers,
+        headers=admin_headers,
     )
     assert resp.status_code == 201
     doc_id = resp.json()["document_id"]
@@ -830,7 +874,7 @@ def test_upload_pdf_persists_text_pages_with_page_numbers(
 # ── 2. DOCX text persistence: single record, page_number=None ─────────────────
 
 def test_upload_docx_persists_text_page_with_null_page_number(
-    client, auth_headers, isolated_storage, db_session
+    client, admin_headers, isolated_storage, db_session
 ):
     """Uploading a DOCX must persist a single text page with page_number=NULL."""
     docx_bytes = make_valid_docx_bytes_with_text("DOCX Policy Content Line One")
@@ -839,7 +883,7 @@ def test_upload_docx_persists_text_page_with_null_page_number(
         "/documents/upload",
         files={"file": ("policy.docx", docx_bytes,
                         "application/vnd.openxmlformats-officedocument.wordprocessingml.document")},
-        headers=auth_headers,
+        headers=admin_headers,
     )
     assert resp.status_code == 201
     doc_id = resp.json()["document_id"]
@@ -1025,7 +1069,7 @@ def test_text_endpoint_requires_authentication(client, sample_document):
 # ── 9. Upload DB failure rolls back file AND text pages atomically ─────────────
 
 def test_upload_db_failure_rolls_back_text_pages_and_removes_file(
-    client, auth_headers, isolated_storage, db_session
+    client, admin_headers, isolated_storage, db_session
 ):
     """
     When the DB commit fails during upload, both the Document record and all
@@ -1037,7 +1081,7 @@ def test_upload_db_failure_rolls_back_text_pages_and_removes_file(
         resp = client.post(
             "/documents/upload",
             files={"file": ("atomic_test.pdf", valid_pdf, "application/pdf")},
-            headers=auth_headers,
+            headers=admin_headers,
         )
 
     assert resp.status_code == 500

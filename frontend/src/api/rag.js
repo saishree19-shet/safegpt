@@ -24,7 +24,7 @@ export async function askQuestion(question, topK = 4, similarityThreshold = null
   }
 
   const res = await api.post('/rag/answer', payload, {
-    timeout: 90000, // Ollama generation may take up to 60-90s
+    timeout: 180000, // Ollama generation may take up to 180s for 3b model
   });
   return res.data;
 }
