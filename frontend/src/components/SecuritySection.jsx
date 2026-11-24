@@ -38,20 +38,20 @@ export default function SecuritySection() {
   ];
 
   return (
-    <section id="security" className="py-20 md:py-32 bg-[#FBFDFB] border-t border-b border-gray-100">
+    <section id="security" className="py-20 md:py-32 bg-[#FAF7F2] border-t border-b border-[#E8ECE6]/60">
       <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
         {/* Section Header */}
         <div className="max-w-3xl mb-16 md:mb-20">
           <div className="mb-4">
-            <span className="font-mono text-xs tracking-[0.2em] uppercase text-sage font-medium">
+            <span className="font-mono text-[11px] sm:text-xs tracking-[0.16em] uppercase text-sage font-medium">
               ZERO-TRUST ARCHITECTURE
             </span>
           </div>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-darkGreen tracking-tight leading-tight">
+          <h2 className="text-3xl sm:text-[36px] lg:text-[38px] font-semibold text-darkGreen tracking-tight leading-[1.18]">
             Security and privacy, <br />
             enforced at every layer.
           </h2>
-          <p className="mt-4 text-base sm:text-lg text-charcoal/70 leading-relaxed">
+          <p className="mt-4 text-[15px] sm:text-base text-charcoal/75 leading-relaxed font-normal">
             CogniSec combines strict application-level access controls, client-side data isolation, and local language models to keep enterprise assets confidential.
           </p>
         </div>
@@ -63,13 +63,13 @@ export default function SecuritySection() {
             return (
               <div
                 key={idx}
-                className="bg-white border border-gray-200/80 rounded-2xl p-6 sm:p-7 shadow-xs hover:border-softGreen transition-all hover:shadow-sm group flex flex-col justify-between"
+                className="bg-[#FAF7F2] border border-[#D5DCCE]/80 rounded-2xl p-6 sm:p-7 shadow-xs hover:border-softGreen transition-all hover:shadow-sm group flex flex-col justify-between"
               >
                 <div>
                   <div className="w-10 h-10 rounded-xl bg-mint-100 border border-mint-border flex items-center justify-center text-darkGreen mb-5 group-hover:bg-darkGreen group-hover:text-white transition-colors">
                     <Icon className="w-5 h-5 stroke-[1.8]" />
                   </div>
-                  <h3 className="text-lg font-bold text-darkGreen tracking-tight mb-2.5">
+                  <h3 className="text-[17px] font-semibold text-darkGreen tracking-tight mb-2">
                     {item.title}
                   </h3>
                   <p className="text-sm text-charcoal/75 leading-relaxed">
@@ -90,7 +90,7 @@ export default function SecuritySection() {
               <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-softGreen mb-5">
                 <Shield className="w-5 h-5" />
               </div>
-              <h3 className="text-lg font-bold text-white tracking-tight mb-2.5">
+              <h3 className="text-[17px] font-semibold text-white tracking-tight mb-2">
                 Privacy by Design
               </h3>
               <p className="text-sm text-mint-100/80 leading-relaxed">

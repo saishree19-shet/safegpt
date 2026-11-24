@@ -125,7 +125,7 @@ export default function SignupPage() {
           className="inline-flex items-center gap-2 text-sm text-charcoal/70 hover:text-darkGreen transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
-          <span>Back to CogniSec</span>
+          <span>Back to Cognisec</span>
         </Link>
       </div>
 
@@ -133,13 +133,10 @@ export default function SignupPage() {
       <div className="max-w-md w-full mx-auto bg-white border border-gray-200/80 rounded-2xl p-8 sm:p-10 shadow-sm my-8">
         {/* Logo */}
         <div className="flex items-center gap-2.5 text-darkGreen mb-6">
-          <div className="w-8 h-8 rounded-lg bg-mint-100 border border-mint-border flex items-center justify-center">
-            <Shield className="w-5 h-5 text-darkGreen stroke-[2.2]" />
-          </div>
-          <span className="text-xl font-bold tracking-tight text-darkGreen">CogniSec</span>
+          <img src="/logo.png" alt="Cognisec" className="h-7 w-auto object-contain" />
         </div>
 
-        <h1 className="text-2xl font-bold text-darkGreen tracking-tight">Get Started</h1>
+        <h1 className="text-2xl font-semibold text-darkGreen tracking-tight">Get Started</h1>
         <p className="text-sm text-charcoal/70 mt-1 mb-8">
           Create your employee account to access company files within your role's permissions.
         </p>

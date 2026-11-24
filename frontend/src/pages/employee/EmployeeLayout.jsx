@@ -1,248 +1,326 @@
 /**
- * EmployeeLayout — Enterprise Authenticated Layout for CogniSec.
+ * EmployeeLayout — Enterprise Authenticated Layout matching CogniSec Reference Design.
  *
- * Includes:
- * - Slim fixed desktop sidebar with CogniSec brand, navigation, and user card
- * - Contextual top header with breadcrumb, employee role pill, user avatar, and logout
- * - Responsive mobile drawer with backdrop
- * - Smooth content container rendering <Outlet />
+ * Implements:
+ * - Collapsible drawer sidebar with React Bits animated morphing hamburger button
+ * - Deep dark forest green (#0D3829) brand navigation drawer
+ * - Exact nav items: Search, Chat, Documents, My Schedule, Privacy Review, Settings
+ * - Bottom User Profile card: Avatar initial, Name, Role ("Enterprise"), dropdown chevron & logout
+ * - Canvas background (#FAF7F2) with smooth rounded container and glassmorphic depth
  */
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import {
-  Shield,
-  LayoutDashboard,
-  FileText,
-  Sparkles,
+  Search,
+  MessageSquare,
+  Folder,
+  Calendar,
   ShieldCheck,
   Settings,
   LogOut,
-  Menu,
-  X,
-  User,
+  ChevronDown,
+  Zap,
+  Pin,
+  PinOff
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import ReactBitsHamburger from '../../components/ReactBitsHamburger';
 
 const NAV_ITEMS = [
-  { path: '/app', label: 'Overview', icon: LayoutDashboard, exact: true },
-  { path: '/app/documents', label: 'My Documents', icon: FileText },
-  { path: '/app/ask', label: 'Ask CogniSec', icon: Sparkles },
-  { path: '/app/security', label: 'Security', icon: ShieldCheck },
-  { path: '/app/settings', label: 'Settings', icon: Settings },
+  { path: '/app', label: 'Search', icon: Search, exact: true, shortcut: '⌘K' },
+  { path: '/app/ask', label: 'Chat', icon: MessageSquare },
+  { path: '/app/documents', label: 'Documents', icon: Folder },
+  { path: '/app/schedule', label: 'My Schedule', icon: Calendar },
+  { path: '/app/privacy', label: 'Privacy Review', icon: ShieldCheck },
 ];
 
 export default function EmployeeLayout() {
   const { user, logoutUser } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Collapsible sidebar state (persists user preference)
+  const [isPinned, setIsPinned] = useState(() => {
+    try {
+      return localStorage.getItem('cognisec_sidebar_pinned') === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  const [sidebarOpen, setSidebarOpen] = useState(isPinned);
+  const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+
+  // Sync pinned state
+  function togglePin() {
+    setIsPinned((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem('cognisec_sidebar_pinned', String(next));
+      } catch {
+        // ignore
+      }
+      if (next) setSidebarOpen(true);
+      return next;
+    });
+  }
+
+  // Close sidebar on ESC key or navigation if not pinned
+  useEffect(() => {
+    function handleKeyDown(e) {
+      if (e.key === 'Escape' && !isPinned) {
+        setSidebarOpen(false);
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key === 'b') {
+        e.preventDefault();
+        setSidebarOpen((p) => !p);
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isPinned]);
+
+  // Close sidebar on route change if not pinned
+  useEffect(() => {
+    if (!isPinned) {
+      setSidebarOpen(false);
+    }
+  }, [location.pathname, isPinned]);
 
   function handleLogout() {
     logoutUser();
     navigate('/login', { replace: true });
   }
 
-  // Initials for avatar
-  const initials = user?.full_name
-    ? user.full_name
-        .split(' ')
-        .map((n) => n[0])
-        .join('')
-        .toUpperCase()
-        .slice(0, 2)
-    : 'EM';
+  // Display metadata
+  const displayName = user?.full_name ? user.full_name.split(' ')[0] : 'Ram';
+  const roleName = user?.role === 'admin' ? 'Administrator' : 'Enterprise';
+  const initial = displayName[0]?.toUpperCase() || 'R';
 
   return (
-    <div className="min-h-screen bg-[#FBFDFB] flex font-sans text-charcoal">
-      {/* ── Desktop Sidebar ────────────────────────────────────────── */}
-      <aside className="hidden md:flex flex-col w-64 border-r border-gray-200/80 bg-white shrink-0 sticky top-0 h-screen select-none">
-        {/* Brand header */}
-        <div className="h-16 px-6 flex items-center gap-2.5 border-b border-gray-100">
-          <div className="w-8 h-8 rounded-lg bg-mint-100 border border-mint-border flex items-center justify-center text-darkGreen">
-            <Shield className="w-5 h-5 stroke-[2.2]" />
-          </div>
-          <div>
-            <span className="text-base font-bold text-darkGreen tracking-tight block">CogniSec</span>
-            <span className="text-[10px] font-mono text-sage block leading-none">
-              Workspace
-            </span>
-          </div>
-        </div>
-
-        {/* Navigation list */}
-        <nav className="p-4 space-y-1.5 flex-1 overflow-y-auto">
-          {NAV_ITEMS.map((item) => {
-            const Icon = item.icon;
-            const isActive = item.exact
-              ? location.pathname === item.path
-              : location.pathname.startsWith(item.path);
-
-            return (
-              <NavLink
-                key={item.path}
-                to={item.path}
-                className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all ${
-                  isActive
-                    ? 'bg-mint-100/70 text-darkGreen font-semibold shadow-2xs border border-mint-border/60'
-                    : 'text-charcoal/70 hover:bg-gray-50 hover:text-darkGreen'
-                }`}
-              >
-                <Icon
-                  className={`w-4 h-4 stroke-[2.2] ${
-                    isActive ? 'text-darkGreen' : 'text-charcoal/50'
-                  }`}
-                />
-                <span>{item.label}</span>
-              </NavLink>
-            );
-          })}
-        </nav>
-
-        {/* User Card at bottom */}
-        <div className="p-4 border-t border-gray-100 bg-gray-50/50">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-8 h-8 rounded-full bg-mint-100 border border-mint-border flex items-center justify-center text-darkGreen font-mono font-bold text-xs shrink-0">
-                {initials}
-              </div>
-              <div className="min-w-0">
-                <span className="text-xs font-semibold text-darkGreen truncate block">
-                  {user?.full_name || 'Employee'}
-                </span>
-                <span className="text-[10px] font-mono text-sage block uppercase tracking-wider">
-                  Employee
-                </span>
-              </div>
-            </div>
-
-            <button
-              onClick={handleLogout}
-              className="p-1.5 text-charcoal/40 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors cursor-pointer shrink-0"
-              title="Sign out"
-            >
-              <LogOut className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-      </aside>
-
-      {/* ── Mobile Slide-Over Drawer ───────────────────────────────── */}
-      {mobileMenuOpen && (
-        <div className="md:hidden fixed inset-0 z-50 flex">
-          {/* Backdrop */}
-          <div
-            className="fixed inset-0 bg-charcoal/40 backdrop-blur-xs transition-opacity"
-            onClick={() => setMobileMenuOpen(false)}
+    <div className="min-h-screen bg-[#FAF7F2] flex flex-col font-sans text-charcoal relative overflow-x-hidden">
+      {/* ── Top Floating Navigation Header Bar with React Bits Hamburger ── */}
+      <header className="sticky top-0 z-40 w-full bg-[#FAF7F2]/90 backdrop-blur-md border-b border-stone-200/60 px-4 sm:px-6 py-2.5 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          {/* React Bits Animated Morphing Hamburger */}
+          <ReactBitsHamburger
+            isOpen={sidebarOpen}
+            onClick={() => setSidebarOpen((prev) => !prev)}
+            className="shrink-0"
           />
 
-          {/* Drawer content */}
-          <div className="relative w-64 max-w-[80%] bg-white h-full flex flex-col z-10 shadow-xl">
-            <div className="h-16 px-6 flex items-center justify-between border-b border-gray-100">
-              <div className="flex items-center gap-2 text-darkGreen">
-                <Shield className="w-5 h-5 stroke-[2.2]" />
-                <span className="text-base font-bold tracking-tight">CogniSec</span>
+          {/* Brand Logo & Current Workspace Indicator */}
+          <div
+            onClick={() => navigate('/app')}
+            className="flex items-center gap-2 cursor-pointer select-none group"
+          >
+            <img
+              src="/logo.png"
+              alt="Cognisec"
+              className="h-8 w-auto max-w-[150px] object-contain drop-shadow-2xs group-hover:opacity-90 transition-opacity"
+            />
+          </div>
+        </div>
+
+        {/* Right Header Controls: User avatar */}
+        <div className="flex items-center gap-3">
+          {/* Quick User Avatar Icon */}
+          <div
+            onClick={() => setSidebarOpen(true)}
+            className="w-8 h-8 rounded-full bg-[#0D3829] text-white flex items-center justify-center font-bold text-xs shadow-2xs cursor-pointer hover:bg-[#154E3A] transition-colors"
+            title={`${user?.full_name} (${roleName})`}
+          >
+            {initial}
+          </div>
+        </div>
+      </header>
+
+      {/* ── Backdrop Overlay when Sidebar Drawer is Open ──────────────── */}
+      {sidebarOpen && !isPinned && (
+        <div
+          onClick={() => setSidebarOpen(false)}
+          className="fixed inset-0 z-40 bg-black/40 backdrop-blur-xs transition-opacity duration-300"
+          aria-hidden="true"
+        />
+      )}
+
+      <div className="flex-1 flex relative">
+        {/* ── Drawer Sidebar (#0D3829) ─────────────────────────────────── */}
+        <aside
+          className={`fixed inset-y-0 left-0 z-50 w-72 bg-[#0D3829] text-white flex flex-col justify-between p-4 shadow-2xl transform transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+            sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+          } ${isPinned ? 'md:sticky md:top-0 md:h-[calc(100vh-53px)] md:shadow-none' : ''}`}
+        >
+          <div className="space-y-5">
+            {/* Drawer Header: Brand + Close/Pin Buttons */}
+            <div className="px-2 pt-2 pb-1 flex items-center justify-between border-b border-white/10">
+              <img
+                src="/logo-white.png"
+                alt="Cognisec"
+                className="h-9 w-auto max-w-[170px] object-contain drop-shadow-sm"
+              />
+
+              <div className="flex items-center gap-1">
+                {/* Pin/Unpin on desktop */}
+                <button
+                  type="button"
+                  onClick={togglePin}
+                  className="hidden md:flex p-1.5 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors"
+                  title={isPinned ? 'Unpin sidebar' : 'Pin sidebar'}
+                >
+                  {isPinned ? <Pin className="w-4 h-4 text-emerald-400" /> : <PinOff className="w-4 h-4" />}
+                </button>
+
+                {/* Close Drawer Button */}
+                <button
+                  type="button"
+                  onClick={() => setSidebarOpen(false)}
+                  className="p-1.5 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                  title="Close sidebar (Esc)"
+                >
+                  <span className="text-sm font-bold">✕</span>
+                </button>
               </div>
-              <button
-                onClick={() => setMobileMenuOpen(false)}
-                className="p-1 rounded-md text-charcoal/50 hover:text-darkGreen"
-              >
-                <X className="w-5 h-5" />
-              </button>
             </div>
 
-            <nav className="p-4 space-y-1.5 flex-1 overflow-y-auto">
+            {/* Navigation list */}
+            <nav className="space-y-1">
               {NAV_ITEMS.map((item) => {
                 const Icon = item.icon;
                 const isActive = item.exact
-                  ? location.pathname === item.path
+                  ? location.pathname === item.path || location.pathname === '/app/search'
                   : location.pathname.startsWith(item.path);
 
                 return (
                   <NavLink
                     key={item.path}
                     to={item.path}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all ${
+                    onClick={() => {
+                      if (!isPinned) setSidebarOpen(false);
+                    }}
+                    className={`flex items-center gap-3.5 px-4 py-2.5 rounded-xl text-xs sm:text-[13px] font-medium transition-all ${
                       isActive
-                        ? 'bg-mint-100/70 text-darkGreen font-semibold border border-mint-border'
-                        : 'text-charcoal/70 hover:bg-gray-50 hover:text-darkGreen'
+                        ? 'bg-[#1D4D3C] text-white font-semibold shadow-xs ring-1 ring-white/10'
+                        : 'text-white/70 hover:text-white hover:bg-white/10'
                     }`}
                   >
-                    <Icon className="w-4 h-4" />
+                    <Icon className="w-4 h-4 shrink-0 stroke-[2.2]" />
                     <span>{item.label}</span>
+                    {item.shortcut && (
+                      <span className="ml-auto text-[10px] font-mono px-1.5 py-0.5 rounded bg-white/10 text-white/60">
+                        {item.shortcut}
+                      </span>
+                    )}
                   </NavLink>
                 );
               })}
             </nav>
-
-            <div className="p-4 border-t border-gray-100 bg-gray-50/50 flex items-center justify-between">
-              <div className="flex items-center gap-2 min-w-0">
-                <div className="w-7 h-7 rounded-full bg-mint-100 text-darkGreen font-mono font-bold text-xs flex items-center justify-center shrink-0">
-                  {initials}
-                </div>
-                <span className="text-xs font-semibold text-darkGreen truncate">
-                  {user?.full_name}
-                </span>
-              </div>
-              <button
-                onClick={handleLogout}
-                className="p-1.5 text-charcoal/40 hover:text-red-700 rounded-lg"
-              >
-                <LogOut className="w-4 h-4" />
-              </button>
-            </div>
           </div>
-        </div>
-      )}
 
-      {/* ── Main Area ──────────────────────────────────────────────── */}
-      <div className="flex-1 flex flex-col min-w-0">
-        {/* Top Header */}
-        <header className="sticky top-0 z-30 h-16 bg-white/95 backdrop-blur-xs border-b border-gray-200/80 px-6 sm:px-8 lg:px-10 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            {/* Mobile Hamburger */}
-            <button
-              onClick={() => setMobileMenuOpen(true)}
-              className="md:hidden p-1.5 rounded-lg border border-gray-200 text-charcoal/60 hover:text-darkGreen"
+          {/* Bottom Section: Settings, User Profile & Query Limit */}
+          <div className="space-y-2.5 pt-4 border-t border-white/10">
+            <NavLink
+              to="/app/settings"
+              onClick={() => {
+                if (!isPinned) setSidebarOpen(false);
+              }}
+              className={`flex items-center gap-3.5 px-4 py-2.5 rounded-xl text-xs sm:text-[13px] font-medium transition-all ${
+                location.pathname.startsWith('/app/settings')
+                  ? 'bg-[#1D4D3C] text-white font-semibold shadow-xs'
+                  : 'text-white/70 hover:text-white hover:bg-white/10'
+              }`}
             >
-              <Menu className="w-5 h-5" />
-            </button>
+              <Settings className="w-4 h-4 shrink-0 stroke-[2.2]" />
+              <span>Settings</span>
+            </NavLink>
 
-            <div className="flex items-center gap-2 text-xs">
-              <span className="text-charcoal/40 hidden sm:inline">Workspace</span>
-              <span className="text-charcoal/30 hidden sm:inline">/</span>
-              <span className="text-darkGreen font-semibold">
-                {NAV_ITEMS.find((item) =>
-                  item.exact
-                    ? location.pathname === item.path
-                    : location.pathname.startsWith(item.path)
-                )?.label || 'Employee Portal'}
-              </span>
-            </div>
-          </div>
+            {/* User profile pill */}
+            <div className="relative">
+              <div
+                onClick={() => setUserDropdownOpen(!userDropdownOpen)}
+                className="flex items-center justify-between p-2.5 rounded-xl bg-black/20 hover:bg-black/30 transition-all cursor-pointer select-none"
+              >
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="w-8 h-8 rounded-full bg-white/20 text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs">
+                    {initial}
+                  </div>
+                  <div className="min-w-0 text-left">
+                    <span className="text-xs font-semibold text-white truncate block leading-tight">
+                      {displayName}
+                    </span>
+                    <span className="text-[10px] text-white/60 block leading-tight">
+                      {roleName}
+                    </span>
+                  </div>
+                </div>
 
-          {/* Right Header items */}
-          <div className="flex items-center gap-3.5">
-            <span className="px-2.5 py-0.5 rounded-full bg-mint-100 text-darkGreen text-[11px] font-mono uppercase font-semibold">
-              Employee
-            </span>
-            <div className="hidden sm:flex items-center gap-2 pl-2 border-l border-gray-200">
-              <div className="w-7 h-7 rounded-full bg-darkGreen text-white font-mono font-bold text-[11px] flex items-center justify-center">
-                {initials}
+                <ChevronDown
+                  className={`w-3.5 h-3.5 text-white/50 transition-transform ${
+                    userDropdownOpen ? 'rotate-180' : ''
+                  }`}
+                />
               </div>
-              <span className="text-xs font-medium text-darkGreen max-w-[140px] truncate">
-                {user?.full_name}
-              </span>
+
+              {/* User Dropdown Menu */}
+              {userDropdownOpen && (
+                <div className="absolute bottom-14 left-0 right-0 bg-white text-charcoal rounded-xl shadow-xl border border-gray-200 py-1.5 text-xs z-50">
+                  <div className="px-3 py-2 border-b border-gray-100">
+                    <span className="font-semibold block text-darkGreen">{user?.full_name}</span>
+                    <span className="text-[11px] text-charcoal/50 font-mono">{user?.email}</span>
+                  </div>
+
+                  {user?.role === 'admin' && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setUserDropdownOpen(false);
+                        navigate('/admin');
+                      }}
+                      className="w-full text-left px-3 py-2 hover:bg-mint-50 text-darkGreen font-medium cursor-pointer"
+                    >
+                      Go to Admin Portal
+                    </button>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="w-full text-left px-3 py-2 hover:bg-red-50 text-red-600 flex items-center gap-2 cursor-pointer"
+                  >
+                    <LogOut className="w-3.5 h-3.5" />
+                    <span>Sign out</span>
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Monthly query limit progress bar */}
+            <div className="p-2.5 rounded-xl bg-black/20 text-white/80 space-y-1.5 text-xs">
+              <div className="flex items-center justify-between text-[11px]">
+                <span className="flex items-center gap-1 font-semibold text-emerald-300">
+                  <Zap className="w-3 h-3 text-emerald-400" />
+                  <span>73F</span>
+                </span>
+                <span className="text-[10px] text-white/50">Monthly query limit</span>
+              </div>
+              <div className="w-full bg-white/10 rounded-full h-1.5 overflow-hidden">
+                <div className="bg-emerald-400 h-full rounded-full w-[45%]" />
+              </div>
             </div>
           </div>
-        </header>
+        </aside>
 
-        {/* Content Body */}
-        <main className="flex-1 p-6 sm:p-8 lg:p-10 max-w-6xl w-full mx-auto">
-          <Outlet />
+        {/* ── Main Canvas Content Container ─────────────────────────── */}
+        <main className="flex-1 min-w-0 p-4 sm:p-6 lg:p-8 overflow-y-auto relative bg-[#FAF7F2]">
+          {/* Atmospheric soft radial glows for clean glassmorphism depth */}
+          <div className="absolute top-0 right-1/4 w-[500px] h-[350px] bg-gradient-to-bl from-emerald-100/40 via-mint-50/20 to-transparent rounded-full blur-3xl pointer-events-none -z-0" />
+          <div className="absolute bottom-10 left-1/3 w-[450px] h-[300px] bg-gradient-to-tr from-amber-50/30 via-stone-100/25 to-transparent rounded-full blur-3xl pointer-events-none -z-0" />
+
+          <div className="max-w-7xl mx-auto relative z-10">
+            <Outlet />
+          </div>
         </main>
       </div>
     </div>
   );
 }
-

@@ -11,7 +11,7 @@ from typing import Optional, Sequence
 
 import httpx
 
-DEFAULT_OLLAMA_BASE_URL: str = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+DEFAULT_OLLAMA_BASE_URL: str = os.getenv("OLLAMA_BASE_URL", "http://127.0.0.1:11434")
 DEFAULT_EMBEDDING_MODEL: str = os.getenv("EMBEDDING_MODEL_NAME", "nomic-embed-text")
 EXPECTED_EMBEDDING_DIM: int = 768
 DEFAULT_BATCH_SIZE: int = int(os.getenv("EMBEDDING_BATCH_SIZE", "32"))

@@ -17,7 +17,7 @@ export default function ProtectedRoute({ children, requiredRole }) {
   // Session restoration in progress — render nothing yet
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#FBFDFB]">
+      <div className="min-h-screen flex items-center justify-center bg-[#FAF7F2]">
         <div className="flex flex-col items-center gap-3 text-charcoal/50">
           <div className="w-6 h-6 border-2 border-darkGreen/30 border-t-darkGreen rounded-full animate-spin" />
           <span className="text-xs font-mono">Verifying session…</span>

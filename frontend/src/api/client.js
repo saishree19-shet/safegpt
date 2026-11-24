@@ -40,7 +40,7 @@ export function clearToken() {
 
 // ── Axios instance ─────────────────────────────────────────────────────────
 const api = axios.create({
-  baseURL: '/api',          // proxied by Vite to http://localhost:8000
+  baseURL: '/api',          // proxied by Vite to http://127.0.0.1:8001 (see vite.config.js)
   timeout: 15000,
   headers: { 'Content-Type': 'application/json' },
 });

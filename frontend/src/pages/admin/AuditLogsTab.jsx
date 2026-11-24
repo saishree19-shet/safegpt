@@ -27,7 +27,6 @@ import {
   Lock,
   Clock,
   Search,
-  Info,
   Eye,
   X,
   CheckCircle2,
@@ -161,15 +160,11 @@ export default function AuditLogsTab() {
   return (
     <div className="space-y-8 animate-in fade-in duration-200">
       {/* ── Section Header ────────────────────────────────────────── */}
-      <div className="pb-4 border-b border-gray-100 flex flex-wrap items-center justify-between gap-4">
+      <div className="pb-5 border-b border-darkGreen/8 flex flex-wrap items-start justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2.5 text-darkGreen">
-            <Activity className="w-5 h-5 stroke-[2.2]" />
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight">
-              Security Audit Logs
-            </h1>
-          </div>
-          <p className="text-xs sm:text-sm text-charcoal/60 mt-1">
+          <p className="typo-eyebrow mb-1.5">Security</p>
+          <h1 className="text-[22px] font-semibold text-darkGreen tracking-tight">Security Audit Logs</h1>
+          <p className="text-[13px] text-darkGreen/55 mt-1.5 leading-relaxed">
             Immutable, server-recorded security events for access control, sanitization, and model queries.
           </p>
         </div>
@@ -182,21 +177,6 @@ export default function AuditLogsTab() {
           <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
           <span>Refresh</span>
         </button>
-      </div>
-
-      {/* ── Security Allowlist Notice ──────────────────────────────── */}
-      <div className="p-4 rounded-2xl bg-cream/60 border border-beige/80 text-xs text-charcoal/80 flex items-start gap-3">
-        <Info className="w-4 h-4 text-sage shrink-0 mt-0.5" />
-        <div className="space-y-1">
-          <span className="font-semibold text-darkGreen block">
-            Safe Metadata Logging Guarantee
-          </span>
-          <p className="leading-relaxed">
-            CogniSec enforces an explicit server-side metadata allowlist before persisting audit
-            records. Passwords, JWT tokens, document contents, and LLM query prompts are strictly
-            excluded from audit storage by architectural design.
-          </p>
-        </div>
       </div>
 
       {/* ── Filters Toolbar ───────────────────────────────────────── */}

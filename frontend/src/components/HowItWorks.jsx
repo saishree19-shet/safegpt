@@ -64,18 +64,18 @@ export default function HowItWorks() {
   ];
 
   return (
-    <section id="how-it-works" className="py-20 md:py-32 max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
+    <section id="how-it-works" className="py-20 md:py-32 bg-[#FAF7F2] max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
       {/* Section Header */}
       <div className="max-w-3xl mb-16 md:mb-20">
         <div className="mb-4">
-          <span className="font-mono text-xs tracking-[0.2em] uppercase text-sage font-medium">
+          <span className="font-mono text-[11px] sm:text-xs tracking-[0.16em] uppercase text-sage font-medium">
             STEP-BY-STEP WORKFLOW
           </span>
         </div>
-        <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-darkGreen tracking-tight leading-tight">
+        <h2 className="text-3xl sm:text-[36px] lg:text-[38px] font-semibold text-darkGreen tracking-tight leading-[1.18]">
           A clear path to a trusted answer.
         </h2>
-        <p className="mt-4 text-base sm:text-lg text-charcoal/70 leading-relaxed">
+        <p className="mt-4 text-[15px] sm:text-base text-charcoal/75 leading-relaxed font-normal">
           From ingestion to answer synthesis, every step is built around access control, privacy protection, and transparent source validation.
         </p>
       </div>
@@ -95,13 +95,13 @@ export default function HowItWorks() {
                     <Icon className="w-6 h-6 stroke-[2]" />
                   </div>
                   <div>
-                    <div className="text-xs font-mono tracking-widest text-softGreen uppercase font-bold mb-1">
+                    <div className="text-[11px] font-mono tracking-[0.16em] text-softGreen uppercase font-medium mb-1">
                       STEP {step.number} — FINAL STEP
                     </div>
-                    <h3 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
+                    <h3 className="text-xl sm:text-2xl font-semibold text-white tracking-tight">
                       {step.title}
                     </h3>
-                    <p className="text-sm text-mint-100/80 mt-1 max-w-2xl leading-relaxed">
+                    <p className="text-sm text-mint-100/80 mt-1 max-w-2xl leading-relaxed font-normal">
                       {step.description}
                     </p>
                   </div>
@@ -122,18 +122,18 @@ export default function HowItWorks() {
             >
               <div>
                 <div className="flex items-center justify-between mb-5">
-                  <span className="text-xs font-mono font-bold text-sage tracking-wider">
+                  <span className="text-xs font-mono font-medium text-sage tracking-wider">
                     {step.number}
                   </span>
-                  <div className="w-8 h-8 rounded-lg bg-white border border-mint-border flex items-center justify-center text-darkGreen">
+                  <div className="w-8 h-8 rounded-lg bg-[#FDFBF7] border border-mint-border flex items-center justify-center text-darkGreen">
                     <Icon className="w-4 h-4 stroke-[1.8]" />
                   </div>
                 </div>
 
-                <h3 className="text-base sm:text-lg font-bold text-darkGreen tracking-tight mb-2">
+                <h3 className="text-base sm:text-[17px] font-semibold text-darkGreen tracking-tight mb-2">
                   {step.title}
                 </h3>
-                <p className="text-xs sm:text-sm text-charcoal/70 leading-relaxed">
+                <p className="text-xs sm:text-sm text-charcoal/75 leading-relaxed font-normal">
                   {step.description}
                 </p>
               </div>

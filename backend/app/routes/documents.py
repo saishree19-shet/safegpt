@@ -224,24 +224,66 @@ def upload_document(
         # Ingest chunks and embeddings for semantic search
         chunk_count = 0
         embedding_status = "pending"
+        # Capture document_id before any potential rollback invalidates the ORM object
+        doc_id = record.id
         try:
-            stored_chunks = ingest_document_chunks_and_embeddings(record.id, db)
+            stored_chunks = ingest_document_chunks_and_embeddings(doc_id, db)
             chunk_count = len(stored_chunks)
             embedding_status = "completed" if chunk_count > 0 else "no_text"
         except OllamaConnectionError as err:
+            db.rollback()
+            if stored_path.exists():
+                stored_path.unlink(missing_ok=True)
             logger.warning(
                 "Ollama embedding service unavailable during upload for doc %d: %s",
-                record.id,
+                doc_id,
                 err,
             )
-            embedding_status = "service_unavailable"
+            # Audit the failure on a fresh transaction
+            log_event(
+                db,
+                event_type=DOCUMENT_UPLOAD,
+                event_status=STATUS_FAILURE,
+                user_id=current_user.id,
+                resource_type=RESOURCE_DOCUMENT,
+                resource_id=doc_id,
+                details={"reason": "ollama_unavailable"},
+            )
+            try:
+                db.commit()
+            except Exception:
+                db.rollback()
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Document indexing failed: Ollama embedding service is unavailable. Please ensure Ollama is running.",
+            )
         except EmbeddingError as err:
+            db.rollback()
+            if stored_path.exists():
+                stored_path.unlink(missing_ok=True)
             logger.error(
                 "Embedding generation failed during upload for doc %d: %s",
-                record.id,
+                doc_id,
                 err,
             )
-            embedding_status = "failed"
+            # Audit the failure on a fresh transaction
+            log_event(
+                db,
+                event_type=DOCUMENT_UPLOAD,
+                event_status=STATUS_FAILURE,
+                user_id=current_user.id,
+                resource_type=RESOURCE_DOCUMENT,
+                resource_id=doc_id,
+                details={"reason": "embedding_failed"},
+            )
+            try:
+                db.commit()
+            except Exception:
+                db.rollback()
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail="Document indexing failed: embedding generation encountered an error.",
+            )
 
         # Audit: DOCUMENT_UPLOAD
         rec = log_event(
@@ -831,6 +873,50 @@ def grant_document_permission(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to grant permission due to database error.",
         )
+
+
+@router.get(
+    "/{document_id}/permissions",
+    response_model=list[DocumentPermissionResponse],
+    summary="List document permissions",
+)
+def list_document_permissions(
+    document_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """List all explicit user permissions granted on this document."""
+    if document_id <= 0:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Document not found.")
+
+    doc = db.query(Document).filter(Document.id == document_id).first()
+    if not doc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Document not found.")
+
+    can_manage = (doc.owner_id == current_user.id) or (current_user.role == "admin")
+    if not can_manage:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You do not have permission to view permissions for this document.",
+        )
+
+    perms = db.query(DocumentPermission).filter(DocumentPermission.document_id == doc.id).all()
+    results = []
+    for p in perms:
+        u = db.query(User).filter(User.id == p.user_id).first()
+        results.append(
+            DocumentPermissionResponse(
+                id=p.id,
+                document_id=p.document_id,
+                user_id=p.user_id,
+                user_email=u.email if u else "unknown",
+                can_read=p.can_read,
+                granted_by=p.granted_by,
+                created_at=p.created_at,
+            )
+        )
+    return results
+
 
 
 @router.delete(

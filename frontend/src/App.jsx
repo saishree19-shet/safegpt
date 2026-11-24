@@ -5,26 +5,31 @@ import ProtectedRoute from './components/ProtectedRoute';
 import PublicOnlyRoute from './components/PublicOnlyRoute';
 
 import LandingPage from './pages/LandingPage';
+import GetStartedPage from './pages/GetStartedPage';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
 
-// Employee Dashboard
+// Employee Dashboard & Workspace Modules
 import EmployeeLayout from './pages/employee/EmployeeLayout';
-import OverviewTab from './pages/employee/OverviewTab';
+import SearchTab from './pages/employee/SearchTab';
 import DocumentsTab from './pages/employee/DocumentsTab';
 import AskTab from './pages/employee/AskTab';
-import SecurityTab from './pages/employee/SecurityTab';
+import ScheduleTab from './pages/employee/ScheduleTab';
+import PrivacyReviewTab from './pages/admin/PrivacyReviewTab';
+import AccessControlTab from './pages/admin/AccessControlTab';
+import AuditLogsTab from './pages/admin/AuditLogsTab';
 import SettingsTab from './pages/employee/SettingsTab';
 
-// Admin Dashboard placeholder (Step 7.4)
+// Admin Dashboard
 import AdminDashboard from './pages/AdminDashboard';
 
 export default function App() {
   return (
     <AuthProvider>
       <Routes>
-        {/* Public Landing */}
+        {/* Public Landing & Documentation */}
         <Route path="/" element={<LandingPage />} />
+        <Route path="/get-started" element={<GetStartedPage />} />
 
         {/* Public-only Auth Pages */}
         <Route
@@ -53,10 +58,13 @@ export default function App() {
             </ProtectedRoute>
           }
         >
-          <Route index element={<OverviewTab />} />
-          <Route path="documents" element={<DocumentsTab />} />
+          <Route index element={<SearchTab />} />
+          <Route path="search" element={<SearchTab />} />
           <Route path="ask" element={<AskTab />} />
-          <Route path="security" element={<SecurityTab />} />
+          <Route path="chat" element={<AskTab />} />
+          <Route path="documents" element={<DocumentsTab />} />
+          <Route path="schedule" element={<ScheduleTab />} />
+          <Route path="privacy" element={<PrivacyReviewTab />} />
           <Route path="settings" element={<SettingsTab />} />
         </Route>
 

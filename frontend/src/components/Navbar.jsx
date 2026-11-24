@@ -32,65 +32,71 @@ export default function Navbar() {
     <header
       className={`sticky top-0 z-50 transition-all duration-200 ${
         isScrolled
-          ? 'bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-sm'
-          : 'bg-white'
+          ? 'bg-[#FAF7F2]/95 backdrop-blur-md border-b border-stone-200/80 shadow-xs'
+          : 'bg-[#FAF7F2]/80 backdrop-blur-sm'
       }`}
     >
       <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 h-20 flex items-center justify-between">
         {/* Brand */}
         <Link
           to="/"
-          className="flex items-center gap-2.5 text-darkGreen font-semibold text-xl tracking-tight hover:opacity-90 transition-opacity"
+          className="flex items-center gap-2.5 text-darkGreen hover:opacity-90 transition-opacity"
         >
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center text-darkGreen">
-            <Shield className="w-6 h-6 stroke-[2.2]" />
-          </div>
-          <span className="text-2xl font-bold tracking-tight text-darkGreen">
-            CogniSec
-          </span>
+          <img
+            src="/logo.png"
+            alt="Cognisec"
+            className="h-8 w-auto object-contain shrink-0"
+          />
         </Link>
 
         {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-charcoal/80">
+        <nav className="hidden md:flex items-center gap-7 text-[13.5px] font-medium text-charcoal/75">
           <button
             onClick={() => scrollToSection('product')}
-            className="hover:text-darkGreen transition-colors"
+            className="hover:text-darkGreen transition-colors cursor-pointer"
           >
             Product
           </button>
           <button
             onClick={() => scrollToSection('features')}
-            className="hover:text-darkGreen transition-colors"
+            className="hover:text-darkGreen transition-colors cursor-pointer"
           >
             Features
           </button>
           <button
             onClick={() => scrollToSection('security')}
-            className="hover:text-darkGreen transition-colors"
+            className="hover:text-darkGreen transition-colors cursor-pointer"
           >
             Security
           </button>
           <button
             onClick={() => scrollToSection('how-it-works')}
-            className="hover:text-darkGreen transition-colors"
+            className="hover:text-darkGreen transition-colors cursor-pointer"
           >
             How It Works
+          </button>
+          <button
+            onClick={() => scrollToSection('get-started')}
+            className="hover:text-darkGreen transition-colors cursor-pointer"
+          >
+            Get Started
           </button>
         </nav>
 
         {/* Desktop CTA / Auth */}
-        <div className="hidden md:flex items-center gap-5">
+        <div className="hidden md:flex items-center gap-4">
           <Link
             to="/login"
-            className="text-sm font-medium text-charcoal/80 hover:text-darkGreen transition-colors px-2 py-1"
+            className="text-[13.5px] font-medium text-charcoal/80 hover:text-darkGreen transition-colors px-2 py-1"
           >
             Log in
           </Link>
           <Link
             to="/signup"
-            className="bg-darkGreen text-white text-sm font-medium px-5 py-2.5 rounded-lg hover:bg-darkGreen/90 transition-all shadow-sm active:scale-[0.99]"
+            className="bg-[#0D3829] text-white text-[13px] font-semibold px-5 py-2.5 rounded-full whitespace-nowrap hover:bg-[#0D3829]/90 transition-all shadow-xs active:scale-[0.99] inline-flex items-center justify-center gap-1.5"
           >
-            Get Started
+            <span>Get Started</span>
+            <span className="text-sm">→</span>
           </Link>
         </div>
 
@@ -106,7 +112,7 @@ export default function Navbar() {
 
       {/* Mobile Menu Dropdown */}
       {mobileMenuOpen && (
-        <div className="md:hidden bg-white border-b border-gray-100 px-6 py-6 space-y-4 shadow-lg animate-in slide-in-from-top duration-200">
+        <div className="md:hidden bg-[#FAF7F2] border-b border-[#E8ECE6]/60 px-6 py-6 space-y-4 shadow-lg animate-in slide-in-from-top duration-200">
           <div className="flex flex-col space-y-3 font-medium text-charcoal">
             <button
               onClick={() => scrollToSection('product')}
@@ -131,6 +137,12 @@ export default function Navbar() {
               className="text-left py-2 hover:text-darkGreen border-b border-gray-50"
             >
               How It Works
+            </button>
+            <button
+              onClick={() => scrollToSection('get-started')}
+              className="text-left py-2 hover:text-darkGreen border-b border-gray-50"
+            >
+              Get Started
             </button>
           </div>
           <div className="pt-4 flex flex-col gap-3">

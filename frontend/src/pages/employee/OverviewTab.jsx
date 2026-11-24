@@ -28,6 +28,7 @@ import DocumentDetailModal from './DocumentDetailModal';
 export default function OverviewTab() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const canUpload = Boolean(user);
 
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -82,16 +83,25 @@ export default function OverviewTab() {
         </div>
 
         <div className="flex items-center gap-3">
-          <button
-            onClick={() => setIsUploadOpen(true)}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-darkGreen text-white text-xs font-medium hover:bg-darkGreen/90 transition-all shadow-xs cursor-pointer"
+          {canUpload && (
+            <button
+              onClick={() => setIsUploadOpen(true)}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-darkGreen text-white text-xs font-medium hover:bg-darkGreen/90 transition-all shadow-xs cursor-pointer"
+            >
+              <FileUp className="w-3.5 h-3.5" />
+              <span>Upload Document</span>
+            </button>
+          )}
+          <Link
+            to="/app/documents"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-white border border-gray-200 text-darkGreen text-xs font-medium hover:bg-mint-50 transition-all shadow-xs"
           >
-            <FileUp className="w-3.5 h-3.5" />
-            <span>Upload Document</span>
-          </button>
+            <FileText className="w-3.5 h-3.5" />
+            <span>Browse Documents</span>
+          </Link>
           <Link
             to="/app/ask"
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-white border border-gray-200 text-darkGreen text-xs font-medium hover:bg-mint-50 transition-all shadow-xs"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-darkGreen text-white text-xs font-medium hover:bg-darkGreen/90 transition-all shadow-xs"
           >
             <MessageSquare className="w-3.5 h-3.5" />
             <span>Ask CogniSec</span>
@@ -190,21 +200,39 @@ export default function OverviewTab() {
           Quick Actions
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <button
-            onClick={() => setIsUploadOpen(true)}
-            className="text-left bg-white border border-gray-200/80 rounded-xl p-4 hover:border-darkGreen/50 hover:bg-mint-50/60 transition-all cursor-pointer group shadow-2xs"
-          >
-            <div className="flex items-center justify-between mb-2">
-              <div className="w-8 h-8 rounded-lg bg-mint-100 text-darkGreen flex items-center justify-center">
-                <FileUp className="w-4 h-4 stroke-[2.2]" />
+          {canUpload ? (
+            <button
+              onClick={() => setIsUploadOpen(true)}
+              className="text-left bg-white border border-gray-200/80 rounded-xl p-4 hover:border-darkGreen/50 hover:bg-mint-50/60 transition-all cursor-pointer group shadow-2xs"
+            >
+              <div className="flex items-center justify-between mb-2">
+                <div className="w-8 h-8 rounded-lg bg-mint-100 text-darkGreen flex items-center justify-center">
+                  <FileUp className="w-4 h-4 stroke-[2.2]" />
+                </div>
+                <ArrowRight className="w-4 h-4 text-charcoal/30 group-hover:text-darkGreen group-hover:translate-x-0.5 transition-all" />
               </div>
-              <ArrowRight className="w-4 h-4 text-charcoal/30 group-hover:text-darkGreen group-hover:translate-x-0.5 transition-all" />
-            </div>
-            <h3 className="text-sm font-semibold text-darkGreen">Upload a Document</h3>
-            <p className="text-xs text-charcoal/60 mt-1 leading-relaxed">
-              Add a PDF or Word file to your authorized knowledge scope.
-            </p>
-          </button>
+              <h3 className="text-sm font-semibold text-darkGreen">Upload a Document</h3>
+              <p className="text-xs text-charcoal/60 mt-1 leading-relaxed">
+                Add a PDF or Word file to your authorized knowledge scope.
+              </p>
+            </button>
+          ) : (
+            <Link
+              to="/app/documents"
+              className="bg-white border border-gray-200/80 rounded-xl p-4 hover:border-darkGreen/50 hover:bg-mint-50/60 transition-all group shadow-2xs block"
+            >
+              <div className="flex items-center justify-between mb-2">
+                <div className="w-8 h-8 rounded-lg bg-mint-100 text-darkGreen flex items-center justify-center">
+                  <FileText className="w-4 h-4 stroke-[2.2]" />
+                </div>
+                <ArrowRight className="w-4 h-4 text-charcoal/30 group-hover:text-darkGreen group-hover:translate-x-0.5 transition-all" />
+              </div>
+              <h3 className="text-sm font-semibold text-darkGreen">Browse Documents</h3>
+              <p className="text-xs text-charcoal/60 mt-1 leading-relaxed">
+                Inspect accessible documents, permissions, and extracted text.
+              </p>
+            </Link>
+          )}
 
           <Link
             to="/app/ask"
@@ -222,21 +250,39 @@ export default function OverviewTab() {
             </p>
           </Link>
 
-          <Link
-            to="/app/documents"
-            className="bg-white border border-gray-200/80 rounded-xl p-4 hover:border-darkGreen/50 hover:bg-mint-50/60 transition-all group shadow-2xs block"
-          >
-            <div className="flex items-center justify-between mb-2">
-              <div className="w-8 h-8 rounded-lg bg-mint-100 text-darkGreen flex items-center justify-center">
-                <FileText className="w-4 h-4 stroke-[2.2]" />
+          {canUpload ? (
+            <Link
+              to="/app/documents"
+              className="bg-white border border-gray-200/80 rounded-xl p-4 hover:border-darkGreen/50 hover:bg-mint-50/60 transition-all group shadow-2xs block"
+            >
+              <div className="flex items-center justify-between mb-2">
+                <div className="w-8 h-8 rounded-lg bg-mint-100 text-darkGreen flex items-center justify-center">
+                  <FileText className="w-4 h-4 stroke-[2.2]" />
+                </div>
+                <ArrowRight className="w-4 h-4 text-charcoal/30 group-hover:text-darkGreen group-hover:translate-x-0.5 transition-all" />
               </div>
-              <ArrowRight className="w-4 h-4 text-charcoal/30 group-hover:text-darkGreen group-hover:translate-x-0.5 transition-all" />
-            </div>
-            <h3 className="text-sm font-semibold text-darkGreen">Browse Documents</h3>
-            <p className="text-xs text-charcoal/60 mt-1 leading-relaxed">
-              Inspect accessible documents, permissions, and extracted text.
-            </p>
-          </Link>
+              <h3 className="text-sm font-semibold text-darkGreen">Browse Documents</h3>
+              <p className="text-xs text-charcoal/60 mt-1 leading-relaxed">
+                Inspect accessible documents, permissions, and extracted text.
+              </p>
+            </Link>
+          ) : (
+            <Link
+              to="/app/security"
+              className="bg-white border border-gray-200/80 rounded-xl p-4 hover:border-darkGreen/50 hover:bg-mint-50/60 transition-all group shadow-2xs block"
+            >
+              <div className="flex items-center justify-between mb-2">
+                <div className="w-8 h-8 rounded-lg bg-mint-100 text-darkGreen flex items-center justify-center">
+                  <ShieldCheck className="w-4 h-4 stroke-[2.2]" />
+                </div>
+                <ArrowRight className="w-4 h-4 text-charcoal/30 group-hover:text-darkGreen group-hover:translate-x-0.5 transition-all" />
+              </div>
+              <h3 className="text-sm font-semibold text-darkGreen">Security & Governance</h3>
+              <p className="text-xs text-charcoal/60 mt-1 leading-relaxed">
+                Review zero-trust protections, automated sanitization, and audit safeguards.
+              </p>
+            </Link>
+          )}
         </div>
       </div>
 
@@ -274,16 +320,20 @@ export default function OverviewTab() {
             <div>
               <p className="text-sm font-semibold text-darkGreen">No documents yet</p>
               <p className="text-xs text-charcoal/60 mt-0.5">
-                Upload your first document or request access from an administrator.
+                {canUpload
+                  ? 'Upload your first document or request access from an administrator.'
+                  : 'Company documents authorized for your account will appear here once granted by an administrator.'}
               </p>
             </div>
-            <button
-              onClick={() => setIsUploadOpen(true)}
-              className="mt-2 inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-darkGreen text-white text-xs font-medium hover:bg-darkGreen/90 transition-all cursor-pointer"
-            >
-              <FileUp className="w-3.5 h-3.5" />
-              <span>Upload now</span>
-            </button>
+            {canUpload && (
+              <button
+                onClick={() => setIsUploadOpen(true)}
+                className="mt-2 inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-darkGreen text-white text-xs font-medium hover:bg-darkGreen/90 transition-all cursor-pointer"
+              >
+                <FileUp className="w-3.5 h-3.5" />
+                <span>Upload now</span>
+              </button>
+            )}
           </div>
         ) : (
           <div className="divide-y divide-gray-100">
@@ -331,13 +381,15 @@ export default function OverviewTab() {
       </div>
 
       {/* Modals */}
-      <DocumentUploadModal
-        isOpen={isUploadOpen}
-        onClose={() => setIsUploadOpen(false)}
-        onUploadSuccess={() => {
-          fetchDocs();
-        }}
-      />
+      {canUpload && (
+        <DocumentUploadModal
+          isOpen={isUploadOpen}
+          onClose={() => setIsUploadOpen(false)}
+          onUploadSuccess={() => {
+            fetchDocs();
+          }}
+        />
+      )}
 
       <DocumentDetailModal
         documentId={selectedDocId}

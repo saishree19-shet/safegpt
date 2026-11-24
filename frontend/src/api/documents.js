@@ -33,7 +33,7 @@ export async function uploadDocument(file, onProgress) {
     headers: {
       'Content-Type': 'multipart/form-data',
     },
-    timeout: 60000, // uploads & embedding can take time
+    timeout: 300000, // 5 min timeout for document extraction, chunking, and Ollama embeddings
     onUploadProgress: (progressEvent) => {
       if (onProgress && progressEvent.total) {
         const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
@@ -85,5 +85,36 @@ export async function revokePermission(documentId, userId) {
   const res = await api.delete(`/documents/${documentId}/permissions/${userId}`);
   return res.data;
 }
+
+/**
+ * Retrieve chunk metadata for a document.
+ * @param {number} documentId
+ * @returns {Promise<DocumentChunksResponse>}
+ */
+export async function getDocumentChunks(documentId) {
+  const res = await api.get(`/documents/${documentId}/chunks`);
+  return res.data;
+}
+
+/**
+ * List all users with granted permissions on a document.
+ * @param {number} documentId
+ * @returns {Promise<DocumentPermissionResponse[]>}
+ */
+export async function listDocumentPermissions(documentId) {
+  const res = await api.get(`/documents/${documentId}/permissions`);
+  return res.data;
+}
+
+/**
+ * List all organization users (Admin only).
+ * @returns {Promise<UserResponse[]>}
+ */
+export async function listUsers() {
+  const res = await api.get('/auth/users');
+  return res.data;
+}
+
+
 
 
