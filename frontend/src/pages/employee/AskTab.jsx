@@ -339,15 +339,17 @@ export default function AskTab() {
     setMessages(newMessages);
     setInputQuery('');
     setLoading(true);
-    setLoadingStep('Searching authorized company documents & verifying permissions…');
+    setLoadingStep('Thinking…');
+
+    const stepTimers = [
+      setTimeout(() => setLoadingStep('Verifying access controls…'), 1000),
+      setTimeout(() => setLoadingStep('Sanitizing sensitive context…'), 2200),
+      setTimeout(() => setLoadingStep('Crafting response…'), 3500),
+    ];
 
     try {
-      const stepTimer = setTimeout(() => {
-        setLoadingStep('Synthesizing answer with local AI in bullet points…');
-      }, 2500);
-
       const data = await askQuestion(q);
-      clearTimeout(stepTimer);
+      stepTimers.forEach(clearTimeout);
 
       const rawSources = Array.isArray(data.sources) ? data.sources : [];
       const hasSources = rawSources.length > 0;
@@ -745,11 +747,18 @@ export default function AskTab() {
               );
             })}
 
-            {/* Loading Indicator */}
+            {/* Claude-style Minimalist Progressive Loading Indicator */}
             {loading && (
-              <div className="flex items-center gap-3 text-xs text-charcoal/70 p-3 bg-mint-50/50 border border-mint-border/50 rounded-xl animate-pulse">
-                <Loader2 className="w-4 h-4 animate-spin text-darkGreen" />
-                <span>{loadingStep || 'Searching authorized company documents…'}</span>
+              <div className="flex items-center gap-2.5 py-1.5 px-2 animate-in fade-in duration-200">
+                <div className="inline-flex items-center gap-2.5 px-3 py-1.5 rounded-full bg-[#FAF7F2] border border-stone-200/80 shadow-2xs">
+                  <div className="relative flex items-center justify-center w-2 h-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[#0D3829]"></span>
+                  </div>
+                  <span className="text-xs font-medium tracking-normal text-darkGreen">
+                    {loadingStep || 'Thinking…'}
+                  </span>
+                </div>
               </div>
             )}
 
