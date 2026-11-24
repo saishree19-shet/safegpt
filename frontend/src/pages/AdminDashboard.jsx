@@ -106,9 +106,9 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAF7F2] flex flex-col font-sans text-charcoal relative overflow-x-hidden">
+    <div className="min-h-screen bg-[#FAF7F2] flex flex-col font-sans text-charcoal relative">
       {/* ── Top Floating Navigation Header Bar with React Bits Hamburger ── */}
-      <header className="sticky top-0 z-40 w-full bg-[#FAF7F2]/90 backdrop-blur-md border-b border-stone-200/60 px-4 sm:px-6 py-2.5 flex items-center justify-between">
+      <header className="sticky top-0 z-40 w-full bg-[#FAF7F2]/95 backdrop-blur-md border-b border-stone-200/80 px-4 sm:px-6 py-2.5 flex items-center justify-between shadow-2xs">
         <div className="flex items-center gap-3">
           {/* React Bits Animated Morphing Hamburger */}
           <ReactBitsHamburger

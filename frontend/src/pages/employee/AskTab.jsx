@@ -100,6 +100,7 @@ export default function AskTab() {
   const recognitionRef = useRef(null);
 
   const messagesEndRef = useRef(null);
+  const messagesContainerRef = useRef(null);
   const inputRef = useRef(null);
   const fileInputRef = useRef(null);
 
@@ -150,7 +151,12 @@ export default function AskTab() {
   }, [activeSessionId]);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTo({
+        top: messagesContainerRef.current.scrollHeight,
+        behavior: 'smooth',
+      });
+    }
   };
 
   useEffect(() => {
@@ -576,7 +582,7 @@ export default function AskTab() {
         {/* ── Left Column: Chat Conversation Stream & Input (8 Cols) ── */}
         <div className="lg:col-span-8 bg-white border border-gray-200/90 rounded-2xl shadow-2xs overflow-hidden flex flex-col justify-between min-h-[640px]">
           {/* Messages Stream */}
-          <div className="flex-1 p-5 sm:p-6 overflow-y-auto max-h-[660px] space-y-6">
+          <div ref={messagesContainerRef} className="flex-1 p-5 sm:p-6 overflow-y-auto max-h-[660px] space-y-6">
             {/* Fresh Start State */}
             {messages.length === 0 && (
               <div className="py-10 sm:py-14 text-center space-y-7 animate-in fade-in duration-200">
