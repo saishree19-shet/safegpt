@@ -14,50 +14,52 @@ import {
 
 export default function FeaturesSection() {
   return (
-    <section id="features" className="py-20 md:py-32 max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
+    <section id="features" className="py-20 md:py-32 max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 bg-[#FAF7F2]">
       {/* Feature Section Header */}
-      <div className="mb-20 md:mb-28 max-w-3xl">
-        <div className="mb-4">
-          <span className="font-mono text-xs tracking-[0.2em] uppercase text-sage font-medium">
+      <div className="mb-16 md:mb-24 max-w-3xl">
+        <div className="mb-3">
+          <span className="text-xs font-semibold tracking-wider uppercase text-sage">
             INTELLIGENCE WITH BOUNDARIES
           </span>
         </div>
-        <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-darkGreen tracking-tight leading-[1.1]">
+        <h2 className="text-3xl sm:text-[36px] lg:text-[38px] font-semibold text-darkGreen tracking-tight leading-[1.18]">
           Everything your team needs to know. <br className="hidden sm:inline" />
           Nothing they shouldn't.
         </h2>
       </div>
 
-      <div className="space-y-28 md:space-y-40">
+      <div className="space-y-24 md:space-y-36">
         
         {/* ========================================================================= */}
         {/* 01 / FIND */}
         {/* ========================================================================= */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-center">
           {/* Narrative (Left) */}
-          <div className="lg:col-span-5 space-y-5">
-            <span className="font-mono text-xs tracking-widest uppercase text-sage font-semibold">
-              01 / FIND
-            </span>
-            <h3 className="text-3xl sm:text-4xl font-bold text-darkGreen tracking-tight leading-tight">
+          <div className="lg:col-span-5 space-y-4">
+            <div className="inline-flex items-center gap-2 text-xs font-semibold text-sage uppercase tracking-wider">
+              <span>01</span>
+              <span className="w-1 h-1 rounded-full bg-sage/60"></span>
+              <span>Knowledge Search</span>
+            </div>
+            <h3 className="text-2xl sm:text-[26px] font-semibold text-darkGreen tracking-tight leading-snug">
               Enterprise knowledge, <br />
               one conversation.
             </h3>
-            <p className="text-base sm:text-lg text-charcoal/75 leading-relaxed">
+            <p className="text-[15px] sm:text-base text-charcoal/75 leading-relaxed font-normal">
               Ask questions in plain language. Search across PDFs and Word files, and get context-aware answers that turn scattered documents into shared understanding.
             </p>
           </div>
 
           {/* Pale Mint Panel (Right) */}
           <div className="lg:col-span-7">
-            <div className="bg-mint-100 border border-mint-border rounded-2xl md:rounded-3xl p-6 sm:p-8 md:p-10 shadow-sm">
-              <div className="text-[11px] font-mono tracking-widest uppercase text-sage font-medium mb-5">
+            <div className="bg-[#E8ECE6]/50 border border-[#C9D5C4] rounded-2xl md:rounded-3xl p-6 sm:p-8 md:p-10 shadow-sm">
+              <div className="text-xs font-semibold tracking-wider uppercase text-sage mb-4">
                 YOUR COMPANY, CONNECTED
               </div>
 
               {/* 3 Document Cards */}
               <div className="space-y-3.5">
-                <div className="bg-white border border-mint-border/90 rounded-xl p-4 sm:p-5 flex items-center gap-3.5 hover:border-softGreen transition-colors shadow-2xs">
+                <div className="bg-[#FDFBF7] border border-mint-border/90 rounded-xl p-4 sm:p-5 flex items-center gap-3.5 hover:border-softGreen transition-colors shadow-2xs">
                   <div className="w-9 h-9 rounded-lg bg-mint-50 border border-mint-border flex items-center justify-center text-darkGreen shrink-0">
                     <FileText className="w-5 h-5 stroke-[1.8]" />
                   </div>
@@ -71,7 +73,7 @@ export default function FeaturesSection() {
                   </div>
                 </div>
 
-                <div className="bg-white border border-mint-border/90 rounded-xl p-4 sm:p-5 flex items-center gap-3.5 hover:border-softGreen transition-colors shadow-2xs">
+                <div className="bg-[#FDFBF7] border border-mint-border/90 rounded-xl p-4 sm:p-5 flex items-center gap-3.5 hover:border-softGreen transition-colors shadow-2xs">
                   <div className="w-9 h-9 rounded-lg bg-mint-50 border border-mint-border flex items-center justify-center text-darkGreen shrink-0">
                     <FileText className="w-5 h-5 stroke-[1.8]" />
                   </div>
@@ -85,7 +87,7 @@ export default function FeaturesSection() {
                   </div>
                 </div>
 
-                <div className="bg-white border border-mint-border/90 rounded-xl p-4 sm:p-5 flex items-center gap-3.5 hover:border-softGreen transition-colors shadow-2xs">
+                <div className="bg-[#FDFBF7] border border-mint-border/90 rounded-xl p-4 sm:p-5 flex items-center gap-3.5 hover:border-softGreen transition-colors shadow-2xs">
                   <div className="w-9 h-9 rounded-lg bg-mint-50 border border-mint-border flex items-center justify-center text-darkGreen shrink-0">
                     <FileText className="w-5 h-5 stroke-[1.8]" />
                   </div>
@@ -109,13 +111,13 @@ export default function FeaturesSection() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-center">
           {/* Pale Mint Panel (Left) */}
           <div className="lg:col-span-7 order-2 lg:order-1">
-            <div className="bg-mint-100 border border-mint-border rounded-2xl md:rounded-3xl p-6 sm:p-8 md:p-10 shadow-sm">
-              <div className="bg-white border border-mint-border rounded-xl p-6 sm:p-7 shadow-xs space-y-5">
+            <div className="bg-[#E8ECE6]/50 border border-[#C9D5C4] rounded-2xl md:rounded-3xl p-6 sm:p-8 md:p-10 shadow-sm">
+              <div className="bg-[#FDFBF7] border border-mint-border rounded-xl p-6 sm:p-7 shadow-xs space-y-5">
                 <div>
-                  <div className="text-[10px] font-mono tracking-wider uppercase text-sage font-semibold">
+                  <div className="text-xs font-semibold tracking-wider uppercase text-sage">
                     DOCUMENT ACCESS
                   </div>
-                  <h4 className="text-lg sm:text-xl font-bold text-darkGreen mt-1">
+                  <h4 className="text-base sm:text-[17px] font-semibold text-darkGreen mt-1">
                     Q4 Financial Report.pdf
                   </h4>
                 </div>
@@ -143,7 +145,7 @@ export default function FeaturesSection() {
                     const sec = document.getElementById('security');
                     if (sec) sec.scrollIntoView({ behavior: 'smooth' });
                   }}
-                  className="w-full bg-[#205244] hover:bg-darkGreen text-white rounded-lg py-3 text-xs sm:text-sm font-medium transition-colors cursor-pointer shadow-xs"
+                  className="w-full bg-[#205244] hover:bg-darkGreen text-white rounded-lg py-2.5 text-sm font-medium transition-colors cursor-pointer shadow-xs"
                 >
                   View access rules
                 </button>
@@ -152,15 +154,17 @@ export default function FeaturesSection() {
           </div>
 
           {/* Narrative (Right) */}
-          <div className="lg:col-span-5 space-y-5 order-1 lg:order-2">
-            <span className="font-mono text-xs tracking-widest uppercase text-sage font-semibold">
-              02 / CONTROL
-            </span>
-            <h3 className="text-3xl sm:text-4xl font-bold text-darkGreen tracking-tight leading-tight">
+          <div className="lg:col-span-5 space-y-4 order-1 lg:order-2">
+            <div className="inline-flex items-center gap-2 text-xs font-semibold text-sage uppercase tracking-wider">
+              <span>02</span>
+              <span className="w-1 h-1 rounded-full bg-sage/60"></span>
+              <span>Access Control</span>
+            </div>
+            <h3 className="text-2xl sm:text-[26px] font-semibold text-darkGreen tracking-tight leading-snug">
               The right answers. <br />
               For the right people.
             </h3>
-            <p className="text-base sm:text-lg text-charcoal/75 leading-relaxed">
+            <p className="text-[15px] sm:text-base text-charcoal/75 leading-relaxed font-normal">
               Access follows your organisation's rules. Employees retrieve only the information they're authorised to see, with permissions checked before retrieval.
             </p>
           </div>
@@ -171,15 +175,17 @@ export default function FeaturesSection() {
         {/* ========================================================================= */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-center">
           {/* Narrative (Left) */}
-          <div className="lg:col-span-5 space-y-5">
-            <span className="font-mono text-xs tracking-widest uppercase text-sage font-semibold">
-              03 / PROTECT
-            </span>
-            <h3 className="text-3xl sm:text-4xl font-bold text-darkGreen tracking-tight leading-tight">
+          <div className="lg:col-span-5 space-y-4">
+            <div className="inline-flex items-center gap-2 text-xs font-semibold text-sage uppercase tracking-wider">
+              <span>03</span>
+              <span className="w-1 h-1 rounded-full bg-sage/60"></span>
+              <span>Privacy Protection</span>
+            </div>
+            <h3 className="text-2xl sm:text-[26px] font-semibold text-darkGreen tracking-tight leading-snug">
               Privacy comes <br />
               before processing.
             </h3>
-            <p className="text-base sm:text-lg text-charcoal/75 leading-relaxed">
+            <p className="text-[15px] sm:text-base text-charcoal/75 leading-relaxed font-normal">
               Identify and protect sensitive information before it reaches the model. Keep the useful context. Leave confidential details out.
             </p>
           </div>
@@ -189,8 +195,8 @@ export default function FeaturesSection() {
             <div className="bg-mint-100 border border-mint-border rounded-2xl md:rounded-3xl p-6 sm:p-8 md:p-10 shadow-sm space-y-4">
               
               {/* Original Passage Card */}
-              <div className="bg-white border border-mint-border rounded-xl p-5 shadow-xs">
-                <div className="text-[10px] font-mono tracking-wider uppercase text-sage font-semibold mb-2">
+              <div className="bg-[#FDFBF7] border border-mint-border rounded-xl p-5 shadow-xs">
+                <div className="text-xs font-semibold tracking-wider uppercase text-sage mb-2">
                   ORIGINAL PASSAGE
                 </div>
                 <p className="text-sm text-charcoal font-mono leading-relaxed">
@@ -200,7 +206,7 @@ export default function FeaturesSection() {
 
               {/* Protected Context Card (Dark Forest Green) */}
               <div className="bg-darkGreen border border-darkGreen rounded-xl p-5 shadow-sm text-white">
-                <div className="text-[10px] font-mono tracking-wider uppercase text-softGreen font-semibold mb-2">
+                <div className="text-xs font-semibold tracking-wider uppercase text-softGreen mb-2">
                   PROTECTED CONTEXT
                 </div>
                 <p className="text-sm font-mono leading-relaxed text-mint-50">
@@ -208,7 +214,7 @@ export default function FeaturesSection() {
                 </p>
               </div>
 
-              <div className="text-xs text-charcoal/60 pt-1 font-mono text-center sm:text-left">
+              <div className="text-xs text-charcoal/60 pt-1 text-center sm:text-left">
                 Sensitive details protected before model processing.
               </div>
             </div>
@@ -222,7 +228,7 @@ export default function FeaturesSection() {
           {/* Dark Forest Green Panel (Left) */}
           <div className="lg:col-span-7 order-2 lg:order-1">
             <div className="bg-darkGreen border border-darkGreen/80 rounded-2xl md:rounded-3xl p-6 sm:p-8 md:p-10 text-white shadow-xl">
-              <div className="text-[10px] font-mono tracking-widest uppercase text-softGreen font-medium mb-6">
+              <div className="text-xs font-semibold tracking-wider uppercase text-softGreen mb-5">
                 WITHIN YOUR SECURITY BOUNDARY
               </div>
 
@@ -276,15 +282,17 @@ export default function FeaturesSection() {
           </div>
 
           {/* Narrative (Right) */}
-          <div className="lg:col-span-5 space-y-5 order-1 lg:order-2">
-            <span className="font-mono text-xs tracking-widest uppercase text-sage font-semibold">
-              04 / KEEP LOCAL
-            </span>
-            <h3 className="text-3xl sm:text-4xl font-bold text-darkGreen tracking-tight leading-tight">
+          <div className="lg:col-span-5 space-y-4 order-1 lg:order-2">
+            <div className="inline-flex items-center gap-2 text-xs font-semibold text-sage uppercase tracking-wider">
+              <span>04</span>
+              <span className="w-1 h-1 rounded-full bg-sage/60"></span>
+              <span>Local Infrastructure</span>
+            </div>
+            <h3 className="text-2xl sm:text-[26px] font-semibold text-darkGreen tracking-tight leading-snug">
               Your infrastructure. <br />
               Your intelligence.
             </h3>
-            <p className="text-base sm:text-lg text-charcoal/75 leading-relaxed">
+            <p className="text-[15px] sm:text-base text-charcoal/75 leading-relaxed font-normal">
               Designed to run AI locally, so company documents don't need to be sent to external AI APIs. Keep control of where knowledge is processed.
             </p>
           </div>
@@ -295,35 +303,37 @@ export default function FeaturesSection() {
         {/* ========================================================================= */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-center">
           {/* Narrative (Left) */}
-          <div className="lg:col-span-5 space-y-5">
-            <span className="font-mono text-xs tracking-widest uppercase text-sage font-semibold">
-              05 / VERIFY
-            </span>
-            <h3 className="text-3xl sm:text-4xl font-bold text-darkGreen tracking-tight leading-tight">
+          <div className="lg:col-span-5 space-y-4">
+            <div className="inline-flex items-center gap-2 text-xs font-semibold text-sage uppercase tracking-wider">
+              <span>05</span>
+              <span className="w-1 h-1 rounded-full bg-sage/60"></span>
+              <span>Evidence Grounding</span>
+            </div>
+            <h3 className="text-2xl sm:text-[26px] font-semibold text-darkGreen tracking-tight leading-snug">
               An answer you <br />
               can trace back.
             </h3>
-            <p className="text-base sm:text-lg text-charcoal/75 leading-relaxed">
+            <p className="text-[15px] sm:text-base text-charcoal/75 leading-relaxed font-normal">
               See the document, the page and the passage behind every response. Give your team a clear path from an answer to its evidence.
             </p>
           </div>
 
           {/* Pale Mint Panel (Right) */}
           <div className="lg:col-span-7">
-            <div className="bg-mint-100 border border-mint-border rounded-2xl md:rounded-3xl p-6 sm:p-8 md:p-10 shadow-sm">
-              <div className="text-[11px] font-mono tracking-widest uppercase text-sage font-medium mb-4">
+            <div className="bg-[#E8ECE6]/50 border border-[#C9D5C4] rounded-2xl md:rounded-3xl p-6 sm:p-8 md:p-10 shadow-sm">
+              <div className="text-xs font-semibold tracking-wider uppercase text-sage mb-4">
                 AUTHENTICATED EVIDENCE
               </div>
 
               {/* Source Document Card */}
-              <div className="bg-white border border-mint-border rounded-xl p-6 shadow-xs space-y-4">
+              <div className="bg-[#FDFBF7] border border-mint-border rounded-xl p-6 shadow-xs space-y-4">
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-lg bg-mint-50 border border-mint-border flex items-center justify-center text-darkGreen">
                       <BookmarkCheck className="w-5 h-5" />
                     </div>
                     <div>
-                      <h4 className="font-bold text-darkGreen text-base">
+                      <h4 className="font-semibold text-darkGreen text-base">
                         Employee Handbook.pdf
                       </h4>
                       <div className="text-xs text-charcoal/60 mt-0.5">

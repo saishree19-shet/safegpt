@@ -26,11 +26,9 @@ export default function ProductWorkspacePreview() {
             <div className="space-y-6">
               {/* Brand in preview */}
               <div className="flex items-center gap-2.5 pb-2">
-                <div className="w-7 h-7 rounded-md bg-darkGreen flex items-center justify-center text-white">
-                  <Shield className="w-4 h-4 stroke-[2.2]" />
-                </div>
+                <img src="/logo.png" alt="CogniSec Logo" className="logo-teal w-[18px] h-[18px] object-contain" />
                 <div>
-                  <div className="text-sm font-bold text-darkGreen leading-tight">CogniSec</div>
+                  <div className="text-sm font-semibold text-darkGreen leading-tight">CogniSec</div>
                   <div className="text-[11px] text-sage font-medium tracking-wide">ENTERPRISE WORKSPACE</div>
                 </div>
               </div>

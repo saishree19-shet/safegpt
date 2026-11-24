@@ -112,7 +112,7 @@ export default function LoginPage() {
           className="inline-flex items-center gap-2 text-sm text-charcoal/70 hover:text-darkGreen transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
-          <span>Back to CogniSec</span>
+          <span>Back to Cognisec</span>
         </Link>
       </div>
 
@@ -120,13 +120,10 @@ export default function LoginPage() {
       <div className="max-w-xl w-full mx-auto bg-white border border-gray-200/80 rounded-2xl p-7 sm:p-10 shadow-sm my-8">
         {/* Brand header */}
         <div className="flex items-center gap-2.5 text-darkGreen mb-6">
-          <div className="w-8 h-8 rounded-lg bg-mint-100 border border-mint-border flex items-center justify-center">
-            <Shield className="w-5 h-5 text-darkGreen stroke-[2.2]" />
-          </div>
-          <span className="text-xl font-bold tracking-tight text-darkGreen">CogniSec</span>
+          <img src="/logo.png" alt="Cognisec" className="h-7 w-auto object-contain" />
         </div>
 
-        <h1 className="text-2xl font-bold text-darkGreen tracking-tight">Enterprise Sign In</h1>
+        <h1 className="text-2xl font-semibold text-darkGreen tracking-tight">Enterprise Sign In</h1>
         <p className="text-sm text-charcoal/70 mt-1 mb-6">
           Select your portal role and enter your enterprise credentials.
         </p>
@@ -322,7 +319,7 @@ export default function LoginPage() {
 
         {/* Footer links */}
         <div className="mt-6 pt-6 border-t border-gray-100 flex items-center justify-between text-xs text-charcoal/60">
-          <span>New to CogniSec?</span>
+          <span>New to Cognisec?</span>
           <Link to="/signup" className="text-darkGreen font-semibold hover:underline">
             Register as Employee
           </Link>

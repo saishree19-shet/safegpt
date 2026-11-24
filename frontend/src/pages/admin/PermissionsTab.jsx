@@ -22,7 +22,6 @@ import {
   CheckCircle2,
   FileText,
   User,
-  Info,
   RefreshCw,
   Lock,
   Mail,
@@ -157,15 +156,11 @@ export default function PermissionsTab({ preselectedDocId }) {
   return (
     <div className="space-y-8 animate-in fade-in duration-200">
       {/* ── Section Header ────────────────────────────────────────── */}
-      <div className="pb-4 border-b border-gray-100 flex flex-wrap items-center justify-between gap-4">
+      <div className="pb-5 border-b border-darkGreen/8 flex flex-wrap items-start justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2.5 text-darkGreen">
-            <KeyRound className="w-5 h-5 stroke-[2.2]" />
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight">
-              Access Permissions
-            </h1>
-          </div>
-          <p className="text-xs sm:text-sm text-charcoal/60 mt-1">
+          <p className="typo-eyebrow mb-1.5">Access Control</p>
+          <h1 className="text-[22px] font-semibold text-darkGreen tracking-tight">Access Permissions</h1>
+          <p className="text-[13px] text-darkGreen/55 mt-1.5 leading-relaxed">
             Grant and revoke document read permissions enforced at the PostgreSQL ACL layer.
           </p>
         </div>
@@ -178,25 +173,6 @@ export default function PermissionsTab({ preselectedDocId }) {
           <RefreshCw className={`w-3.5 h-3.5 ${loadingDocs ? 'animate-spin' : ''}`} />
           <span>Refresh Documents</span>
         </button>
-      </div>
-
-      {/* ── User Directory API Notice ──────────────────────────────── */}
-      <div className="p-4 rounded-2xl bg-cream/60 border border-beige/80 text-xs text-charcoal/80 flex items-start gap-3">
-        <Info className="w-4 h-4 text-sage shrink-0 mt-0.5" />
-        <div className="space-y-1">
-          <span className="font-semibold text-darkGreen block">
-            Target User Identification
-          </span>
-          <p className="leading-relaxed">
-            The backend permission endpoints (
-            <code className="font-mono text-[11px] text-darkGreen font-semibold">
-              POST /documents/{'{document_id}'}/permissions
-            </code>
-            ) verify user existence directly against PostgreSQL. Because an organization-wide user listing
-            endpoint is pending in the backend, you can specify target users by verified{' '}
-            <strong>Email Address</strong> or <strong>User ID</strong>.
-          </p>
-        </div>
       </div>
 
       {/* ── Action Feedback Banners ────────────────────────────────── */}

@@ -12,7 +12,7 @@ export default function PublicOnlyRoute({ children }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#FBFDFB]">
+      <div className="min-h-screen flex items-center justify-center bg-[#FAF7F2]">
         <div className="w-6 h-6 border-2 border-darkGreen/30 border-t-darkGreen rounded-full animate-spin" />
       </div>
     );

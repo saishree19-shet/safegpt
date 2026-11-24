@@ -22,7 +22,7 @@ export default function TrustBar() {
   ];
 
   return (
-    <section className="py-16 md:py-20 border-t border-b border-gray-100 bg-white">
+    <section className="py-16 md:py-20 border-t border-b border-[#E8ECE6]/60 bg-[#FAF7F2]">
       <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 text-center">
         <h2 className="text-2xl sm:text-3xl font-semibold text-darkGreen tracking-tight mb-12">
           Built for organisations where information matters.

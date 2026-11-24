@@ -21,8 +21,8 @@ export default function EmployeeDashboard() {
       {/* Top bar */}
       <header className="sticky top-0 z-50 bg-white border-b border-gray-200/70 px-6 sm:px-10 py-4 flex items-center justify-between">
         <div className="flex items-center gap-2.5 text-darkGreen">
-          <Shield className="w-5 h-5 stroke-[2.2]" />
-          <span className="text-lg font-bold tracking-tight">CogniSec</span>
+          <img src="/logo.png" alt="CogniSec Logo" className="logo-teal w-[20px] h-[20px] object-contain" />
+          <span className="text-[17px] font-semibold tracking-tight text-darkGreen">CogniSec</span>
           <span className="ml-3 px-2 py-0.5 rounded-full bg-mint-100 border border-mint-border text-xs font-mono text-sage">
             Employee
           </span>

@@ -201,8 +201,17 @@ def parse_structured_llm_response(raw_response: str) -> dict[str, Any] | None:
     try:
         data = json.loads(stripped)
     except (json.JSONDecodeError, ValueError):
-        logger.debug("Structured LLM response JSON parse failed — treating as plain text.")
-        return None
+        # Attempt extracting JSON object substring if model included text preamble or postamble
+        json_match = re.search(r"\{[\s\S]*\"answer\"[\s\S]*\}", stripped)
+        if json_match:
+            try:
+                data = json.loads(json_match.group(0))
+            except Exception:
+                logger.debug("Structured LLM response JSON parse failed — treating as plain text.")
+                return None
+        else:
+            logger.debug("Structured LLM response JSON parse failed — treating as plain text.")
+            return None
 
     if not isinstance(data, dict):
         return None

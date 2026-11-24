@@ -285,3 +285,26 @@ def read_current_user(
     Retrieve profile of the currently authenticated user using Bearer token.
     """
     return current_user
+
+
+@router.get(
+    "/users",
+    response_model=list[UserResponse],
+    status_code=status.HTTP_200_OK,
+    summary="List all organization users (Admins only)"
+)
+def list_users(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Retrieve all registered users and employees.
+    Restricted to authenticated administrators.
+    """
+    if current_user.role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access restricted to administrators."
+        )
+    return db.query(User).order_by(User.id.asc()).all()
+

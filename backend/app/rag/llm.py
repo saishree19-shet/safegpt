@@ -26,7 +26,7 @@ from app.rag.prompts import (
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_OLLAMA_BASE_URL: str = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+DEFAULT_OLLAMA_BASE_URL: str = os.getenv("OLLAMA_BASE_URL", "http://127.0.0.1:11434")
 DEFAULT_OLLAMA_CHAT_MODEL: str = os.getenv("OLLAMA_CHAT_MODEL", "llama3.2:1b")
 DEFAULT_OLLAMA_TIMEOUT: float = float(os.getenv("OLLAMA_TIMEOUT", "120.0"))
 
@@ -89,7 +89,8 @@ class OllamaChatClient:
             raise LLMGenerationError("Context text must not be empty for answer generation.")
 
         chat_endpoint = f"{self.base_url}/api/chat"
-        if system_prompt == STRUCTURED_SYSTEM_PROMPT or "JSON" in system_prompt:
+        is_json_requested = (system_prompt == STRUCTURED_SYSTEM_PROMPT or "JSON" in system_prompt)
+        if is_json_requested:
             user_message_content = format_structured_user_prompt(question, context_text)
         else:
             user_message_content = format_user_prompt(question, context_text)
@@ -108,6 +109,10 @@ class OllamaChatClient:
                 "num_predict": 1024,
             },
         }
+
+        # Enable JSON grammar mode in Ollama when structured output is expected
+        if is_json_requested:
+            payload["format"] = "json"
 
         client = self._get_client()
         should_close = (self._http_client is None)

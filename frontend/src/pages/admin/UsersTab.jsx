@@ -17,11 +17,9 @@ import {
   ShieldCheck,
   Lock,
   UserCheck,
-  Info,
   Calendar,
   Mail,
   Hash,
-  AlertTriangle,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
@@ -59,58 +57,14 @@ export default function UsersTab() {
   return (
     <div className="space-y-8 animate-in fade-in duration-200">
       {/* ── Section Header ────────────────────────────────────────── */}
-      <div className="pb-4 border-b border-gray-100 flex flex-wrap items-center justify-between gap-4">
+      <div className="pb-5 border-b border-darkGreen/8 flex flex-wrap items-start justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2.5 text-darkGreen">
-            <Users className="w-5 h-5 stroke-[2.2]" />
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight">User Directory</h1>
-          </div>
-          <p className="text-xs sm:text-sm text-charcoal/60 mt-1">
+          <p className="typo-eyebrow mb-1.5">User Management</p>
+          <h1 className="text-[22px] font-semibold text-darkGreen tracking-tight">User Directory</h1>
+          <p className="text-[13px] text-darkGreen/55 mt-1.5 leading-relaxed">
             Access governance, identity authentication, and role assignment boundaries.
           </p>
         </div>
-
-        {/* Read-Only Status Indicator */}
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-amber-50 border border-amber-200/80 text-amber-900 text-xs font-medium">
-          <AlertTriangle className="w-3.5 h-3.5 text-amber-700 shrink-0" />
-          <span>Read-Only · Directory API Pending</span>
-        </div>
-      </div>
-
-      {/* ── Backend Capability Notice ─────────────────────────────── */}
-      <div className="p-5 rounded-2xl bg-cream/60 border border-beige/80 text-xs text-charcoal/80 space-y-2.5">
-        <div className="flex items-center gap-2 text-darkGreen font-semibold">
-          <Info className="w-4 h-4 text-sage shrink-0" />
-          <span>Backend User Enumeration Capability</span>
-        </div>
-        <p className="leading-relaxed">
-          The CogniSec backend currently provides authentication endpoints for signup (
-          <code className="font-mono px-1 py-0.5 bg-white rounded border border-gray-200 text-charcoal text-[11px]">
-            POST /auth/signup
-          </code>
-          ), authentication (
-          <code className="font-mono px-1 py-0.5 bg-white rounded border border-gray-200 text-charcoal text-[11px]">
-            POST /auth/login
-          </code>
-          ), and session verification (
-          <code className="font-mono px-1 py-0.5 bg-white rounded border border-gray-200 text-charcoal text-[11px]">
-            GET /auth/me
-          </code>
-          ).
-        </p>
-        <p className="leading-relaxed text-charcoal/70">
-          A dedicated administrative user-listing endpoint (e.g.{' '}
-          <code className="font-mono px-1 py-0.5 bg-white rounded border border-gray-200 text-charcoal text-[11px]">
-            GET /admin/users
-          </code>{' '}
-          or{' '}
-          <code className="font-mono px-1 py-0.5 bg-white rounded border border-gray-200 text-charcoal text-[11px]">
-            GET /users
-          </code>
-          ) is required before organization-wide employee accounts can be enumerated in this panel.
-          In accordance with CogniSec zero-trust principles, no simulated or fabricated records are
-          displayed.
-        </p>
       </div>
 
       {/* ── Active Administrator Profile Card ──────────────────────── */}
@@ -237,14 +191,6 @@ export default function UsersTab() {
               </tr>
             </tbody>
           </table>
-        </div>
-
-        {/* Empty state notice for unlisted accounts */}
-        <div className="p-6 text-center border-t border-gray-100 bg-gray-50/30">
-          <p className="text-xs text-charcoal/60 max-w-lg mx-auto leading-relaxed">
-            Additional employee accounts are managed in PostgreSQL but require a backend user
-            administration route (<code className="font-mono text-darkGreen font-semibold">GET /admin/users</code>) to be safely enumerated.
-          </p>
         </div>
       </div>
 

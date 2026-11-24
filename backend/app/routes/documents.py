@@ -875,6 +875,50 @@ def grant_document_permission(
         )
 
 
+@router.get(
+    "/{document_id}/permissions",
+    response_model=list[DocumentPermissionResponse],
+    summary="List document permissions",
+)
+def list_document_permissions(
+    document_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """List all explicit user permissions granted on this document."""
+    if document_id <= 0:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Document not found.")
+
+    doc = db.query(Document).filter(Document.id == document_id).first()
+    if not doc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Document not found.")
+
+    can_manage = (doc.owner_id == current_user.id) or (current_user.role == "admin")
+    if not can_manage:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You do not have permission to view permissions for this document.",
+        )
+
+    perms = db.query(DocumentPermission).filter(DocumentPermission.document_id == doc.id).all()
+    results = []
+    for p in perms:
+        u = db.query(User).filter(User.id == p.user_id).first()
+        results.append(
+            DocumentPermissionResponse(
+                id=p.id,
+                document_id=p.document_id,
+                user_id=p.user_id,
+                user_email=u.email if u else "unknown",
+                can_read=p.can_read,
+                granted_by=p.granted_by,
+                created_at=p.created_at,
+            )
+        )
+    return results
+
+
+
 @router.delete(
     "/{document_id}/permissions/{user_id}",
     response_model=ActionMessageResponse,
