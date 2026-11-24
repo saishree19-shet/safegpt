@@ -115,6 +115,35 @@ export async function listUsers() {
   return res.data;
 }
 
+/**
+ * Create a new user (Admin only).
+ * @param {{ full_name: string, email: string, password?: string, role?: string }} data
+ */
+export async function createUser(data) {
+  const res = await api.post('/auth/users', data);
+  return res.data;
+}
+
+/**
+ * Update user role or status (Admin only).
+ * @param {number} userId
+ * @param {{ role?: string, is_active?: boolean, full_name?: string }} data
+ */
+export async function updateUser(userId, data) {
+  const res = await api.patch(`/auth/users/${userId}`, data);
+  return res.data;
+}
+
+/**
+ * Delete a user account (Admin only).
+ * @param {number} userId
+ */
+export async function deleteUser(userId) {
+  const res = await api.delete(`/auth/users/${userId}`);
+  return res.data;
+}
+
+
 
 
 

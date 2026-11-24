@@ -308,3 +308,131 @@ def list_users(
         )
     return db.query(User).order_by(User.id.asc()).all()
 
+
+@router.post(
+    "/users",
+    response_model=UserResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Create a new user (Admin only)"
+)
+def create_user_by_admin(
+    payload: SignupRequest,
+    request: Request,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Admin endpoint to provision a new user or administrator account directly.
+    """
+    if current_user.role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access restricted to administrators."
+        )
+
+    normalized_email = payload.email.strip().lower()
+    existing_user = db.query(User).filter(User.email == normalized_email).first()
+    if existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="An account with this email already exists."
+        )
+
+    hashed_pw = hash_password(payload.password or "Password123!")
+    new_user = User(
+        full_name=payload.full_name.strip(),
+        email=normalized_email,
+        password_hash=hashed_pw,
+        role="employee",
+        is_active=True,
+    )
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    return new_user
+
+
+@router.patch(
+    "/users/{user_id}",
+    response_model=UserResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Update user role or active status (Admin only)"
+)
+async def update_user_by_admin(
+    user_id: int,
+    request: Request,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Admin endpoint to update user role or active/inactive state.
+    """
+    if current_user.role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access restricted to administrators."
+        )
+
+    target_user = db.query(User).filter(User.id == user_id).first()
+    if not target_user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found."
+        )
+
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+
+    if "role" in body:
+        role_val = str(body["role"]).lower()
+        if role_val in ("admin", "employee", "editor", "viewer"):
+            # Map editor/viewer to employee if needed or store directly
+            target_user.role = "admin" if role_val == "admin" else "employee"
+    if "is_active" in body:
+        target_user.is_active = bool(body["is_active"])
+    if "full_name" in body and body["full_name"]:
+        target_user.full_name = str(body["full_name"]).strip()
+
+    db.commit()
+    db.refresh(target_user)
+    return target_user
+
+
+@router.delete(
+    "/users/{user_id}",
+    status_code=status.HTTP_200_OK,
+    summary="Delete a user account (Admin only)"
+)
+def delete_user_by_admin(
+    user_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Admin endpoint to delete a user account.
+    """
+    if current_user.role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access restricted to administrators."
+        )
+    if current_user.id == user_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Administrators cannot delete their own account."
+        )
+
+    target_user = db.query(User).filter(User.id == user_id).first()
+    if not target_user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found."
+        )
+
+    db.delete(target_user)
+    db.commit()
+    return {"message": "User deleted successfully."}
+
+
